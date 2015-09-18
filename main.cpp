@@ -65,7 +65,7 @@ static void mem_error_cb(memtest_t *memp, testtype type, size_t index,
  ******************************************************************************
  */
 
-static const size_t sram_size = 128 * 1024;
+static const size_t sram_size = 128 * 1024;//128 * 1024;
 static double test_buf_mtrx[33*33];
 
 // for sync RAM testing
@@ -83,13 +83,13 @@ static const SRAMConfig sram_cfg = {
 
     // BTR
     (0 << 16) | // BUSTURN
-    (6 << 8) |  // DATAST
+    (7 << 8) |  // DATAST
     (0 << 4) |  // ADDHLD
     (0 << 0),   // ADDSET
 
     // BWTR
     (0 << 16) | // BUSTURN
-    (2 << 8) |  // DATAST
+    (4 << 8) |  // DATAST
     (0 << 4) |  // ADDHLD
     (0 << 0),   // ADDSET
 };

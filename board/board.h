@@ -1037,12 +1037,12 @@
  */
 #define VAL_GPIOI_MODER             (PIN_MODE_OUTPUT(GPIOI_SPI_NSS) |         \
                                      PIN_MODE_ALTERNATE(GPIOI_SPI_SCK) |      \
-                                     PIN_MODE_ALTERNATE(GPIOI_TIM8_CH4) |     \
+                                     PIN_MODE_INPUT(GPIOI_TIM8_CH4) |     \
                                      PIN_MODE_ALTERNATE(GPIOI_SPI_MOSI) |     \
                                      PIN_MODE_OUTPUT(GPIOI_LED_O) |           \
-                                     PIN_MODE_ALTERNATE(GPIOI_TIM8_CH1) |     \
-                                     PIN_MODE_ALTERNATE(GPIOI_TIM8_CH2) |     \
-                                     PIN_MODE_ALTERNATE(GPIOI_TIM8_CH3) |     \
+                                     PIN_MODE_INPUT(GPIOI_TIM8_CH1) |     \
+                                     PIN_MODE_INPUT(GPIOI_TIM8_CH2) |     \
+                                     PIN_MODE_INPUT(GPIOI_TIM8_CH3) |     \
                                      PIN_MODE_OUTPUT(GPIOI_LED_R) |           \
                                      PIN_MODE_INPUT(GPIOI_PIN9) |             \
                                      PIN_MODE_INPUT(GPIOI_PIN10) |            \
@@ -1117,12 +1117,12 @@
                                      PIN_ODR_LOW(GPIOI_PIN15))
 #define VAL_GPIOI_AFRL              (PIN_AFIO_AF(GPIOI_SPI_NSS, 0) |          \
                                      PIN_AFIO_AF(GPIOI_SPI_SCK, 5) |          \
-                                     PIN_AFIO_AF(GPIOI_TIM8_CH4, 3) |         \
+                                     PIN_AFIO_AF(GPIOI_TIM8_CH4, 0) |         \
                                      PIN_AFIO_AF(GPIOI_SPI_MOSI, 5) |         \
                                      PIN_AFIO_AF(GPIOI_LED_O, 0) |            \
-                                     PIN_AFIO_AF(GPIOI_TIM8_CH1, 3) |         \
-                                     PIN_AFIO_AF(GPIOI_TIM8_CH2, 3) |         \
-                                     PIN_AFIO_AF(GPIOI_TIM8_CH3, 3))
+                                     PIN_AFIO_AF(GPIOI_TIM8_CH1, 0) |         \
+                                     PIN_AFIO_AF(GPIOI_TIM8_CH2, 0) |         \
+                                     PIN_AFIO_AF(GPIOI_TIM8_CH3, 0))
 #define VAL_GPIOI_AFRH              (PIN_AFIO_AF(GPIOI_LED_R, 0) |            \
                                      PIN_AFIO_AF(GPIOI_PIN9, 0) |             \
                                      PIN_AFIO_AF(GPIOI_PIN10, 0) |            \
