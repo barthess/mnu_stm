@@ -65,34 +65,40 @@ static void mem_error_cb(memtest_t *memp, testtype type, size_t index,
  ******************************************************************************
  */
 
-static const size_t sram_size = 128 * 1024;//128 * 1024;
+static const size_t sram_size = 1 * 1024;//128 * 1024;
 static double test_buf_mtrx[33*33];
 
-// for sync RAM testing
-//static const SRAMConfig sram_cfg = {
-//    (0 << 24) | // DATLAT
-//    (15 << 20) | // CLKDIV
-//    (0 << 16) | // BUSTURN
-//    (3 << 8)  |
-//    (1 << 0)
-//};
-
-// for async RAM
+// sync
 static const SRAMConfig sram_cfg = {
-    (FSMC_BCR_MWID_16 | FSMC_BCR_MTYP_SRAM | FSMC_BCR_WREN | FSMC_BCR_EXTMOD),
+    (FSMC_BCR_MWID_16 | FSMC_BCR_MTYP_PSRAM | FSMC_BCR_BURSTEN | FSMC_BCR_WREN | FSMC_BCR_CBURSTRW | FSMC_BCR_WAITPOL),
 
     // BTR
-    (0 << 16) | // BUSTURN
-    (7 << 8) |  // DATAST
-    (0 << 4) |  // ADDHLD
-    (0 << 0),   // ADDSET
+    (0 << 24) | // DATLAT
+    (1 << 20) | // CLKDIV (0 value not supported, 15 - max)
+    (0 << 16),  // BUSTURN
 
     // BWTR
-    (0 << 16) | // BUSTURN
-    (4 << 8) |  // DATAST
-    (0 << 4) |  // ADDHLD
-    (0 << 0),   // ADDSET
+    (0 << 24) | // DATLAT
+    (1 << 20) | // CLKDIV (0 value not supported, 15 - max)
+    (0 << 16),  // BUSTURN
 };
+
+// async
+//static const SRAMConfig sram_cfg = {
+//    (FSMC_BCR_MWID_16 | FSMC_BCR_MTYP_SRAM | FSMC_BCR_WREN | FSMC_BCR_EXTMOD),
+//
+//    // BTR
+//    (6 << 16) | // BUSTURN
+//    (12 << 8) |  // DATAST
+//    (0 << 4) |  // ADDHLD
+//    (0 << 0),   // ADDSET
+//
+//    // BWTR
+//    (6 << 16) | // BUSTURN
+//    (9 << 8) |  // DATAST
+//    (0 << 4) |  // ADDHLD
+//    (0 << 0),   // ADDSET
+//};
 
 static memtest_t memtest_struct = {
     (void *)FSMC_Bank1_1_MAP,
@@ -164,15 +170,16 @@ static void membench(void) {
 
 
 
-typedef uint32_t memword;
-static volatile memword pattern = 0xFFFF0000;
+typedef uint16_t memword;
+static volatile memword pattern = 0xFF00;
 static volatile memword devnull = 0;
 void mem_oscillo_probe_dbg(void) {
   volatile memword *ptr = (memword *)memtest_struct.start;
 
   osalSysLock();
-  ptr[0] = pattern;
-  port_rt_get_counter_value();
+//  ptr[0] = pattern;
+//  ptr[1] = ~pattern;
+//  port_rt_get_counter_value();
   devnull = ptr[0];
   devnull = ptr[1];
   osalSysUnlock();
@@ -280,16 +287,16 @@ int main(void) {
     osalThreadSleepMilliseconds(70);
   }
 
-  membench();
+  //membench();
   gnss_select(GNSSReceiver::ublox);
   msnoInit();
 
   //spi_fpga_test();
 
-//  while (true) {
-//    mem_oscillo_probe_dbg();
-//    osalThreadSleepMilliseconds(1);
-//  }
+  while (true) {
+    mem_oscillo_probe_dbg();
+    //osalThreadSleep(1);
+  }
 
   /*
    * Normal main() thread activity, in this demo it does nothing.

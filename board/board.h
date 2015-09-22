@@ -538,7 +538,7 @@
 #define VAL_GPIOD_MODER             (PIN_MODE_ALTERNATE(GPIOD_MEM_D2) |       \
                                      PIN_MODE_ALTERNATE(GPIOD_MEM_D3) |       \
                                      PIN_MODE_INPUT(GPIOD_PIN2) |             \
-                                     PIN_MODE_ALTERNATE(GPIOD_MEM_CLK) |         \
+                                     PIN_MODE_ALTERNATE(GPIOD_MEM_CLK) |      \
                                      PIN_MODE_ALTERNATE(GPIOD_MEM_OE) |       \
                                      PIN_MODE_ALTERNATE(GPIOD_MEM_WE) |       \
                                      PIN_MODE_INPUT(GPIOD_FPGA_IO5) |         \
@@ -554,7 +554,7 @@
 #define VAL_GPIOD_OTYPER            (PIN_OTYPE_PUSHPULL(GPIOD_MEM_D2) |       \
                                      PIN_OTYPE_PUSHPULL(GPIOD_MEM_D3) |       \
                                      PIN_OTYPE_PUSHPULL(GPIOD_PIN2) |         \
-                                     PIN_OTYPE_PUSHPULL(GPIOD_MEM_CLK) |     \
+                                     PIN_OTYPE_PUSHPULL(GPIOD_MEM_CLK) |      \
                                      PIN_OTYPE_PUSHPULL(GPIOD_MEM_OE) |       \
                                      PIN_OTYPE_PUSHPULL(GPIOD_MEM_WE) |       \
                                      PIN_OTYPE_PUSHPULL(GPIOD_FPGA_IO5) |     \
@@ -570,7 +570,7 @@
 #define VAL_GPIOD_OSPEEDR           (PIN_OSPEED_100M(GPIOD_MEM_D2) |          \
                                      PIN_OSPEED_100M(GPIOD_MEM_D3) |          \
                                      PIN_OSPEED_100M(GPIOD_PIN2) |            \
-                                     PIN_OSPEED_100M(GPIOD_MEM_CLK) |        \
+                                     PIN_OSPEED_100M(GPIOD_MEM_CLK) |         \
                                      PIN_OSPEED_100M(GPIOD_MEM_OE) |          \
                                      PIN_OSPEED_100M(GPIOD_MEM_WE) |          \
                                      PIN_OSPEED_100M(GPIOD_FPGA_IO5) |        \
@@ -586,7 +586,7 @@
 #define VAL_GPIOD_PUPDR             (PIN_PUPDR_FLOATING(GPIOD_MEM_D2) |       \
                                      PIN_PUPDR_FLOATING(GPIOD_MEM_D3) |       \
                                      PIN_PUPDR_FLOATING(GPIOD_PIN2) |         \
-                                     PIN_PUPDR_FLOATING(GPIOD_MEM_CLK) |     \
+                                     PIN_PUPDR_FLOATING(GPIOD_MEM_CLK) |      \
                                      PIN_PUPDR_FLOATING(GPIOD_MEM_OE) |       \
                                      PIN_PUPDR_FLOATING(GPIOD_MEM_WE) |       \
                                      PIN_PUPDR_FLOATING(GPIOD_FPGA_IO5) |     \
@@ -602,7 +602,7 @@
 #define VAL_GPIOD_ODR               (PIN_ODR_HIGH(GPIOD_MEM_D2) |             \
                                      PIN_ODR_HIGH(GPIOD_MEM_D3) |             \
                                      PIN_ODR_HIGH(GPIOD_PIN2) |               \
-                                     PIN_ODR_HIGH(GPIOD_MEM_CLK) |           \
+                                     PIN_ODR_LOW(GPIOD_MEM_CLK) |             \
                                      PIN_ODR_HIGH(GPIOD_MEM_OE) |             \
                                      PIN_ODR_HIGH(GPIOD_MEM_WE) |             \
                                      PIN_ODR_HIGH(GPIOD_FPGA_IO5) |           \
@@ -1037,12 +1037,12 @@
  */
 #define VAL_GPIOI_MODER             (PIN_MODE_OUTPUT(GPIOI_SPI_NSS) |         \
                                      PIN_MODE_ALTERNATE(GPIOI_SPI_SCK) |      \
-                                     PIN_MODE_INPUT(GPIOI_TIM8_CH4) |     \
+                                     PIN_MODE_INPUT(GPIOI_TIM8_CH4) |         \
                                      PIN_MODE_ALTERNATE(GPIOI_SPI_MOSI) |     \
                                      PIN_MODE_OUTPUT(GPIOI_LED_O) |           \
-                                     PIN_MODE_INPUT(GPIOI_TIM8_CH1) |     \
-                                     PIN_MODE_INPUT(GPIOI_TIM8_CH2) |     \
-                                     PIN_MODE_INPUT(GPIOI_TIM8_CH3) |     \
+                                     PIN_MODE_INPUT(GPIOI_TIM8_CH1) |         \
+                                     PIN_MODE_INPUT(GPIOI_TIM8_CH2) |         \
+                                     PIN_MODE_INPUT(GPIOI_TIM8_CH3) |         \
                                      PIN_MODE_OUTPUT(GPIOI_LED_R) |           \
                                      PIN_MODE_INPUT(GPIOI_PIN9) |             \
                                      PIN_MODE_INPUT(GPIOI_PIN10) |            \
