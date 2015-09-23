@@ -65,7 +65,7 @@ static void mem_error_cb(memtest_t *memp, testtype type, size_t index,
  ******************************************************************************
  */
 
-static const size_t sram_size = 1 * 1024;//128 * 1024;
+static const size_t sram_size = 128 * 1024;//128 * 1024;
 static double test_buf_mtrx[33*33];
 
 // sync
@@ -148,6 +148,7 @@ static void membench(void) {
 
   chTMObjectInit(&mem_tmu_r);
   chTMObjectInit(&mem_tmu_w);
+  double *ptr = (double *)memtest_struct.start;
 
   double pattern = 1.1;
   for (size_t i=0; i<33*33; i++) {
@@ -157,13 +158,19 @@ static void membench(void) {
 
   chTMStartMeasurementX(&mem_tmu_w);
   for (size_t i=0; i<1000; i++) {
-    memcpy(memtest_struct.start, test_buf_mtrx, sizeof(test_buf_mtrx));
+    for (size_t i=0; i<33*33; i++) {
+      ptr[i] = test_buf_mtrx[i];
+    }
+    //memcpy(memtest_struct.start, test_buf_mtrx, sizeof(test_buf_mtrx));
   }
   chTMStopMeasurementX(&mem_tmu_w);
 
   chTMStartMeasurementX(&mem_tmu_r);
   for (size_t i=0; i<1000; i++) {
-    memcpy(test_buf_mtrx, memtest_struct.start, sizeof(test_buf_mtrx));
+    for (size_t i=0; i<33*33; i++) {
+      test_buf_mtrx[i] = ptr[i];
+    }
+    //memcpy(test_buf_mtrx, memtest_struct.start, sizeof(test_buf_mtrx));
   }
   chTMStopMeasurementX(&mem_tmu_r);
 }
@@ -177,11 +184,11 @@ void mem_oscillo_probe_dbg(void) {
   volatile memword *ptr = (memword *)memtest_struct.start;
 
   osalSysLock();
-//  ptr[0] = pattern;
+  ptr[0] = pattern;
 //  ptr[1] = ~pattern;
 //  port_rt_get_counter_value();
-  devnull = ptr[0];
-  devnull = ptr[1];
+//  devnull = ptr[0];
+//  devnull = ptr[1];
   osalSysUnlock();
 }
 
@@ -252,10 +259,10 @@ int main(void) {
 
   // Enable special "compensation cell" for IO working on 100MHz.
   // Looks like FSMC works slower when it enabled
-  rccEnableAPB2(RCC_APB2ENR_SYSCFGEN, false);
-  SYSCFG->CMPCR |= SYSCFG_CMPCR_CMP_PD;
-  while (! SYSCFG->CMPCR & SYSCFG_CMPCR_READY)
-    ;
+//  rccEnableAPB2(RCC_APB2ENR_SYSCFGEN, false);
+//  SYSCFG->CMPCR |= SYSCFG_CMPCR_CMP_PD;
+//  while (! SYSCFG->CMPCR & SYSCFG_CMPCR_READY)
+//    ;
 
   chHeapObjectInit(&ThdHeap, (uint8_t *)MEM_ALIGN_NEXT(link_thd_buf), THREAD_HEAP_SIZE);
   //uiInit();
@@ -287,16 +294,15 @@ int main(void) {
     osalThreadSleepMilliseconds(70);
   }
 
-  //membench();
+  membench();
   gnss_select(GNSSReceiver::ublox);
   msnoInit();
 
   //spi_fpga_test();
 
-  while (true) {
-    mem_oscillo_probe_dbg();
-    //osalThreadSleep(1);
-  }
+//  while (true) {
+//    mem_oscillo_probe_dbg();
+//  }
 
   /*
    * Normal main() thread activity, in this demo it does nothing.
