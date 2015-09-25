@@ -45,6 +45,12 @@
  */
 #define USE_INFINITE_MEMTEST    TRUE
 
+#define MEMTEST_RUN_ALL_FAST  (MEMTEST_WALKING_ONE              | \
+                               MEMTEST_WALKING_ZERO             | \
+                               MEMTEST_OWN_ADDRESS              | \
+                               MEMTEST_MOVING_INVERSION_ZERO    | \
+                               MEMTEST_MOVING_INVERSION_55AA)
+
 /*
  ******************************************************************************
  * EXTERNS
@@ -74,12 +80,12 @@ static const SRAMConfig sram_cfg = {
 
     // BTR
     (0 << 24) | // DATLAT
-    (1 << 20) | // CLKDIV (0 value not supported, 15 - max)
+    (2 << 20) | // CLKDIV (0 value not supported, 15 - max)
     (0 << 16),  // BUSTURN
 
     // BWTR
     (0 << 24) | // DATLAT
-    (1 << 20) | // CLKDIV (0 value not supported, 15 - max)
+    (2 << 20) | // CLKDIV (0 value not supported, 15 - max)
     (0 << 16),  // BUSTURN
 };
 
@@ -103,7 +109,7 @@ static const SRAMConfig sram_cfg = {
 static memtest_t memtest_struct = {
     (void *)FSMC_Bank1_1_MAP,
     sram_size,
-    MEMTEST_WIDTH_16,
+    MEMTEST_WIDTH_32,
     mem_error_cb
 };
 
@@ -137,7 +143,7 @@ static void mem_error_cb(memtest_t *memp, testtype type, size_t index,
  *
  */
 static void memtest(void) {
-
+  //memtest_run(&memtest_struct, MEMTEST_RUN_ALL_FAST);
   memtest_run(&memtest_struct, MEMTEST_RUN_ALL);
 }
 
