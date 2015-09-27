@@ -199,38 +199,47 @@ void mem_oscillo_probe_dbg(void) {
   osalSysUnlock();
 }
 
-double op1 = 0;
-double op2 = 0;
+double op1 = 3.71;
+double op2 = 1.3;
 volatile double result;
-const double step = 0.1;
+const double step = 0.13;
 size_t wait_cycles = 0;
 double delta;
 void fpga_mul_test(void) {
   volatile double *ptr = (double *)memtest_struct.start;
-  volatile uint64_t *ptr_u64 = (uint64_t *)memtest_struct.start;
 
   ptr[1] = op1;
   ptr[2] = op2;
-  ptr_u64[0] = 1;
 
-  while (ptr_u64[0] != 0) {
-    wait_cycles++;
-  }
+  // wait until data flushed from internal FSMC's fifo
+  while (PAL_LOW == palReadPad(GPIOD, GPIOD_MEM_NE1));
 
-  osalThreadSleep(1);
+  // notify FPGA
+  palSetPad(GPIOB, GPIOB_FPGA_IO2);
+
+  // wait ready pin
+  while (PAL_HIGH != palReadPad(GPIOB, GPIOB_FPGA_IO1));
+
+  // collect result
   result = ptr[3];
 
-  delta = fabs(result - op1*op2);
+  // reset FPGA state machine to IDLE state
+  palClearPad(GPIOB, GPIOB_FPGA_IO2);
+
+  // wait FPGA reset
+  while (PAL_LOW != palReadPad(GPIOB, GPIOB_FPGA_IO1));
+
+  delta = fabs(result - (op1*op2));
   if (delta > (double)0.0001)
     red_led_on();
 
   wait_cycles = 0;
   op1 += step;
-  op2 += step;
-  if (op1 > 10)
-    op1 = -10;
-  if (op2 > 10)
-    op2 = -10;
+  op2 += step + (double)0.071;
+  if (op1 > 100)
+    op1 = -100;
+  if (op2 > 100)
+    op2 = -100;
 }
 
 /*
