@@ -16,6 +16,7 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <math.h>
 
 #include "ch.hpp"
 #include "hal.h"
@@ -198,6 +199,40 @@ void mem_oscillo_probe_dbg(void) {
   osalSysUnlock();
 }
 
+double op1 = 0;
+double op2 = 0;
+volatile double result;
+const double step = 0.1;
+size_t wait_cycles = 0;
+double delta;
+void fpga_mul_test(void) {
+  volatile double *ptr = (double *)memtest_struct.start;
+  volatile uint64_t *ptr_u64 = (uint64_t *)memtest_struct.start;
+
+  ptr[1] = op1;
+  ptr[2] = op2;
+  ptr_u64[0] = 1;
+
+  while (ptr_u64[0] != 0) {
+    wait_cycles++;
+  }
+
+  osalThreadSleep(1);
+  result = ptr[3];
+
+  delta = fabs(result - op1*op2);
+  if (delta > (double)0.0001)
+    red_led_on();
+
+  wait_cycles = 0;
+  op1 += step;
+  op2 += step;
+  if (op1 > 10)
+    op1 = -10;
+  if (op2 > 10)
+    op2 = -10;
+}
+
 /*
  ******************************************************************************
  * EXPORTED FUNCTIONS
@@ -298,6 +333,11 @@ int main(void) {
     osalThreadSleepMilliseconds(30);
     orange_led_off();
     osalThreadSleepMilliseconds(70);
+  }
+
+  while (true) {
+    fpga_mul_test();
+    //osalThreadSleepSeconds(2);
   }
 
   membench();
