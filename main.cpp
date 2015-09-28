@@ -110,7 +110,8 @@ static const SRAMConfig sram_cfg = {
 static memtest_t memtest_struct = {
     (void *)FSMC_Bank1_1_MAP,
     sram_size,
-    MEMTEST_WIDTH_32,
+    //MEMTEST_WIDTH_32 | MEMTEST_WIDTH_16,
+    MEMTEST_WIDTH_8,
     mem_error_cb
 };
 
@@ -235,7 +236,7 @@ void fpga_mul_test(void) {
 
   wait_cycles = 0;
   op1 += step;
-  op2 += step + (double)0.071;
+  op2 += step + (double)0.0171;
   if (op1 > 100)
     op1 = -100;
   if (op2 > 100)
@@ -344,10 +345,9 @@ int main(void) {
     osalThreadSleepMilliseconds(70);
   }
 
-  while (true) {
-    fpga_mul_test();
-    //osalThreadSleepSeconds(2);
-  }
+//  while (true) {
+//    fpga_mul_test();
+//  }
 
   membench();
   gnss_select(GNSSReceiver::ublox);
