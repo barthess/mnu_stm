@@ -72,7 +72,7 @@ static void mem_error_cb(memtest_t *memp, testtype type, size_t index,
  ******************************************************************************
  */
 
-static const size_t sram_size = 128 * 1024;//128 * 1024;
+static const size_t sram_size = 16 * 1024;//128 * 1024;
 static double test_buf_mtrx[33*33];
 
 // sync
@@ -110,8 +110,8 @@ static const SRAMConfig sram_cfg = {
 static memtest_t memtest_struct = {
     (void *)FSMC_Bank1_1_MAP,
     sram_size,
-    //MEMTEST_WIDTH_32 | MEMTEST_WIDTH_16,
-    MEMTEST_WIDTH_8,
+    MEMTEST_WIDTH_16,
+    //MEMTEST_WIDTH_8,
     mem_error_cb
 };
 
