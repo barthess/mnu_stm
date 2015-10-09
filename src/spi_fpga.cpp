@@ -27,7 +27,7 @@
 static const SPIConfig spi_cfg = {
     NULL,
     GPIOI,
-    GPIOI_SPI_NSS,
+    GPIOI_ADIS_NSS,
     0//SPI_CR1_BR_0 | SPI_CR1_BR_1 | SPI_CR1_BR_2
 };
 

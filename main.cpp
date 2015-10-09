@@ -72,7 +72,7 @@ static void mem_error_cb(memtest_t *memp, testtype type, size_t index,
  ******************************************************************************
  */
 
-static const size_t sram_size = 16 * 1024;//128 * 1024;
+static const size_t sram_size = 8*8 * 1024;//128 * 1024;
 static double test_buf_mtrx[33*33];
 
 // sync
@@ -110,7 +110,7 @@ static const SRAMConfig sram_cfg = {
 static memtest_t memtest_struct = {
     (void *)FSMC_Bank1_1_MAP,
     sram_size,
-    MEMTEST_WIDTH_16,
+    MEMTEST_WIDTH_32 | MEMTEST_WIDTH_16,
     //MEMTEST_WIDTH_8,
     mem_error_cb
 };
@@ -145,7 +145,6 @@ static void mem_error_cb(memtest_t *memp, testtype type, size_t index,
  *
  */
 static void memtest(void) {
-  //memtest_run(&memtest_struct, MEMTEST_RUN_ALL_FAST);
   memtest_run(&memtest_struct, MEMTEST_RUN_ALL);
 }
 
@@ -243,19 +242,30 @@ void fpga_mul_test(void) {
     op2 = -100;
 }
 
+static const SerialConfig xbee_ser_cfg = {
+    XBEE_BAUDRATE,
+    0,
+    0,
+#if XBEE_USE_CTS_RTS
+    USART_CR3_CTSE | USART_CR3_RTSE
+#else
+    0
+#endif
+};
+
 /*
  ******************************************************************************
  * EXPORTED FUNCTIONS
  ******************************************************************************
  */
 
-static TMP75 tmp75(&I2CD_SENSORS, tmp75addr);
-static LSM303_mag lsm303mag(&I2CD_SENSORS, lsm303magaddr);
-static MPU6050 mpu6050(&I2CD_SENSORS, mpu6050addr);
-static NPA700 npa700(&I2CD_SENSORS, npa700addr);
-static MS5806 ms5806(&I2CD_SENSORS, ms5806addr);
-static fram fram0(&I2CD_NVRAM, FRAM0_I2C_ADDR);
-static fram fram1(&I2CD_NVRAM, FRAM1_I2C_ADDR);
+static TMP75 tmp75(&MPU6050_I2CD, tmp75addr);
+static LSM303_mag lsm303mag(&MPU6050_I2CD, lsm303magaddr);
+static MPU6050 mpu6050(&MPU6050_I2CD, mpu6050addr);
+static NPA700 npa700(&MPU6050_I2CD, npa700addr);
+static MS5806 ms5806(&MPU6050_I2CD, ms5806addr);
+static fram fram0(&FRAM_I2CD, FRAM0_I2C_ADDR);
+static fram fram1(&FRAM_I2CD, FRAM1_I2C_ADDR);
 static gps::gps_data_t gps_data;
 extern IDT5 idt5;
 
@@ -349,6 +359,8 @@ int main(void) {
 //    fpga_mul_test();
 //  }
 
+  sdStart(&XBEESD, &xbee_ser_cfg);
+
   membench();
   gnss_select(GNSSReceiver::ublox);
   msnoInit();
@@ -379,13 +391,16 @@ int main(void) {
 //    ADCgetBoardVoltage();
     msnoTest(gps_data);
 
-
     memtest();
     green_led_toggle();
     memtest();
     red_led_toggle();
     memtest();
     orange_led_toggle();
+
+
+    // serial port for xbee test
+    sdWrite(&XBEESD, (uint8_t *)"test", 5);
   }
 }
 

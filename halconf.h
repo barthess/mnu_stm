@@ -52,6 +52,13 @@
 #endif
 
 /**
+ * @brief   Enables the DAC subsystem.
+ */
+#if !defined(HAL_USE_DAC) || defined(__DOXYGEN__)
+#define HAL_USE_DAC                 FALSE
+#endif
+
+/**
  * @brief   Enables the CAN subsystem.
  */
 #if !defined(HAL_USE_CAN) || defined(__DOXYGEN__)
@@ -348,6 +355,12 @@
 #if !defined(NAND_USE_BAD_MAP) || defined(__DOXYGEN__)
 #define NAND_USE_BAD_MAP             TRUE
 #endif
+
+/*===========================================================================*/
+/* Community drivers's includes                                              */
+/*===========================================================================*/
+
+#include "halconf_community.h"
 
 #endif /* _HALCONF_H_ */
 

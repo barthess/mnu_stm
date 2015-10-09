@@ -34,10 +34,10 @@
  * HAL driver system settings.
  */
 #define STM32_NO_INIT                       FALSE
-#define STM32_HSI_ENABLED                   TRUE
-#define STM32_LSI_ENABLED                   TRUE
+#define STM32_HSI_ENABLED                   FALSE
+#define STM32_LSI_ENABLED                   FALSE
 #define STM32_HSE_ENABLED                   TRUE
-#define STM32_LSE_ENABLED                   FALSE
+#define STM32_LSE_ENABLED                   TRUE
 #define STM32_CLOCK48_REQUIRED              TRUE
 #define STM32_SW                            STM32_SW_PLL
 #define STM32_PLLSRC                        STM32_PLLSRC_HSE
@@ -45,9 +45,9 @@
 #define STM32_HPRE                          STM32_HPRE_DIV1
 #define STM32_PPRE1                         STM32_PPRE1_DIV4
 #define STM32_PPRE2                         STM32_PPRE2_DIV2
-#define STM32_RTCSEL                        STM32_RTCSEL_LSI
+#define STM32_RTCSEL                        STM32_RTCSEL_LSE
 #define STM32_RTCPRE_VALUE                  8
-#define STM32_MCO1SEL                       STM32_MCO1SEL_HSI
+#define STM32_MCO1SEL                       STM32_MCO1SEL_HSE
 #define STM32_MCO1PRE                       STM32_MCO1PRE_DIV1
 #define STM32_MCO2SEL                       STM32_MCO2SEL_SYSCLK
 #define STM32_MCO2PRE                       STM32_MCO2PRE_DIV5
@@ -110,7 +110,7 @@
 #define STM32_GPT_USE_TIM3                  FALSE
 #define STM32_GPT_USE_TIM4                  FALSE
 #define STM32_GPT_USE_TIM5                  FALSE
-#define STM32_GPT_USE_TIM6                  FALSE
+#define STM32_GPT_USE_TIM6                  TRUE
 #define STM32_GPT_USE_TIM7                  FALSE
 #define STM32_GPT_USE_TIM8                  FALSE
 #define STM32_GPT_USE_TIM9                  FALSE
@@ -184,12 +184,12 @@
  * PWM driver system settings.
  */
 #define STM32_PWM_USE_ADVANCED              FALSE
-#define STM32_PWM_USE_TIM1                  FALSE
+#define STM32_PWM_USE_TIM1                  TRUE
 #define STM32_PWM_USE_TIM2                  FALSE
 #define STM32_PWM_USE_TIM3                  FALSE
 #define STM32_PWM_USE_TIM4                  FALSE
 #define STM32_PWM_USE_TIM5                  FALSE
-#define STM32_PWM_USE_TIM8                  TRUE
+#define STM32_PWM_USE_TIM8                  FALSE
 #define STM32_PWM_USE_TIM9                  FALSE
 #define STM32_PWM_TIM1_IRQ_PRIORITY         7
 #define STM32_PWM_TIM2_IRQ_PRIORITY         7
@@ -218,7 +218,7 @@
 #define STM32_SERIAL_USE_USART3             FALSE
 #define STM32_SERIAL_USE_UART4              FALSE
 #define STM32_SERIAL_USE_UART5              FALSE
-#define STM32_SERIAL_USE_USART6             FALSE
+#define STM32_SERIAL_USE_USART6             TRUE
 #define STM32_SERIAL_USART1_PRIORITY        12
 #define STM32_SERIAL_USART2_PRIORITY        12
 #define STM32_SERIAL_USART3_PRIORITY        12
@@ -301,23 +301,8 @@
 #define STM32_USB_OTGFIFO_FILL_BASEPRI      0
 
 /*
- * FSMC driver system settings.
+ * header for community drivers.
  */
-#define STM32_FSMC_USE_FSMC1                TRUE
-#define STM32_FSMC_FSMC1_IRQ_PRIORITY       10
+#include "mcuconf_community.h"
 
-/*
- * FSMC NAND driver system settings.
- */
-#define STM32_NAND_USE_FSMC_NAND1           FALSE
-#define STM32_NAND_USE_EXT_INT              FALSE
-#define STM32_NAND_DMA_STREAM               STM32_DMA_STREAM_ID(2, 7)
-#define STM32_NAND_DMA_PRIORITY             0
-#define STM32_NAND_DMA_ERROR_HOOK(nandp)    osalSysHalt("DMA failure")
-
-/*
- * FSMC SRAM driver system settings.
- */
-#define STM32_USE_FSMC_SRAM                 TRUE
-#define STM32_SRAM_USE_FSMC_SRAM1           TRUE
 

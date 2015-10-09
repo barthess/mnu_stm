@@ -39,6 +39,6 @@ static const I2CConfig i2cfg = {
  *
  */
 void I2CInitLocal(void){
-  i2cStart(&I2CD_SENSORS, &i2cfg);
-  i2cStart(&I2CD_NVRAM, &i2cfg);
+  i2cStart(&MPU6050_I2CD, &i2cfg);
+  i2cStart(&FRAM_I2CD, &i2cfg);
 }
