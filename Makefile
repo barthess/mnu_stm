@@ -110,8 +110,10 @@ CSRC = $(STARTUPSRC) \
        $(CHIBIOS)/os/hal/lib/streams/chprintf.c \
        $(CHIBIOS)/os/hal/lib/streams/memstreams.c \
        board/board.c \
-       src/microrl.c
-
+       src/microrl.c \
+       src/fpga.c \
+       src/fpga_mul.c \
+	
 # C++ sources that can be compiled in ARM or THUMB mode depending on the global
 # setting.
 CPPSRC = $(CHCPPSRC) \
@@ -120,19 +122,10 @@ CPPSRC = $(CHCPPSRC) \
 		src/i2c_local.cpp \
 		src/i2c_sensor.cpp \
 		src/tmp75.cpp \
-		src/lsm303_mag.cpp \
-		src/mpu6050.cpp \
-		src/npa700.cpp \
-		src/ms5806.cpp \
-		src/fram.cpp \
 		src/adc_local.cpp \
-		src/it530.cpp \
-		src/msno.cpp \
-		src/nmea.cpp \
 		src/idt5.cpp \
-		src/spi_fpga.cpp \
 		cli/cli.cpp \
-		cli/cli_cmd.cpp \
+		cli/cli_cmd.cpp
 
 # C sources to be compiled in ARM mode regardless of the global setting.
 # NOTE: Mixing ARM and THUMB mode enables the -mthumb-interwork compiler

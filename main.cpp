@@ -18,26 +18,14 @@
 #include <stdlib.h>
 #include <math.h>
 
-#include "ch.hpp"
-#include "hal.h"
-
 #include "main.h"
 #include "fsmc_sram.h"
 #include "pads.h"
 #include "memtest.h"
-#include "i2c_local.hpp"
-#include "tmp75.hpp"
-#include "lsm303_mag.hpp"
-#include "mpu6050.hpp"
-#include "npa700.hpp"
-#include "ms5806.hpp"
-#include "fram.hpp"
-#include "adc_local.hpp"
-#include "it530.hpp"
 #include "msno.hpp"
 #include "idt5.hpp"
 #include "ui.hpp"
-#include "spi_fpga.hpp"
+#include "fpga.h"
 
 /*
  ******************************************************************************
@@ -110,7 +98,7 @@ static const SRAMConfig sram_cfg = {
 static memtest_t memtest_struct = {
     (void *)FSMC_Bank1_1_MAP,
     sram_size,
-    MEMTEST_WIDTH_32 | MEMTEST_WIDTH_16,
+    MEMTEST_WIDTH_64 | MEMTEST_WIDTH_32 | MEMTEST_WIDTH_16,
     //MEMTEST_WIDTH_8,
     mem_error_cb
 };
@@ -199,59 +187,6 @@ void mem_oscillo_probe_dbg(void) {
   osalSysUnlock();
 }
 
-double op1 = 3.71;
-double op2 = 1.3;
-volatile double result;
-const double step = 0.13;
-size_t wait_cycles = 0;
-double delta;
-void fpga_mul_test(void) {
-  volatile double *ptr = (double *)memtest_struct.start;
-
-  ptr[1] = op1;
-  ptr[2] = op2;
-
-  // wait until data flushed from internal FSMC's fifo
-  while (PAL_LOW == palReadPad(GPIOD, GPIOD_MEM_NE1));
-
-  // notify FPGA
-  palSetPad(GPIOB, GPIOB_FPGA_IO2);
-
-  // wait ready pin
-  while (PAL_HIGH != palReadPad(GPIOB, GPIOB_FPGA_IO1));
-
-  // collect result
-  result = ptr[3];
-
-  // reset FPGA state machine to IDLE state
-  palClearPad(GPIOB, GPIOB_FPGA_IO2);
-
-  // wait FPGA reset
-  while (PAL_LOW != palReadPad(GPIOB, GPIOB_FPGA_IO1));
-
-  delta = fabs(result - (op1*op2));
-  if (delta > (double)0.0001)
-    red_led_on();
-
-  wait_cycles = 0;
-  op1 += step;
-  op2 += step + (double)0.0171;
-  if (op1 > 100)
-    op1 = -100;
-  if (op2 > 100)
-    op2 = -100;
-}
-
-static const SerialConfig xbee_ser_cfg = {
-    XBEE_BAUDRATE,
-    0,
-    0,
-#if XBEE_USE_CTS_RTS
-    USART_CR3_CTSE | USART_CR3_RTSE
-#else
-    0
-#endif
-};
 
 /*
  ******************************************************************************
@@ -259,56 +194,16 @@ static const SerialConfig xbee_ser_cfg = {
  ******************************************************************************
  */
 
-static TMP75 tmp75(&MPU6050_I2CD, tmp75addr);
-static LSM303_mag lsm303mag(&MPU6050_I2CD, lsm303magaddr);
-static MPU6050 mpu6050(&MPU6050_I2CD, mpu6050addr);
-static NPA700 npa700(&MPU6050_I2CD, npa700addr);
-static MS5806 ms5806(&MPU6050_I2CD, ms5806addr);
-static fram fram0(&FRAM_I2CD, FRAM0_I2C_ADDR);
-static fram fram1(&FRAM_I2CD, FRAM1_I2C_ADDR);
-static gps::gps_data_t gps_data;
-extern IDT5 idt5;
-
 /* heap for temporarily threads */
 memory_heap_t ThdHeap;
 static uint8_t link_thd_buf[THREAD_HEAP_SIZE + sizeof(stkalign_t)];
-
-
-
-enum GNSSReceiver {
-  navi = 0,
-  navi_nmea,
-  ublox,
-  unused,
-};
-
-static void gnss_select(GNSSReceiver receiver) {
-  switch(receiver) {
-  case GNSSReceiver::navi:
-    palClearPad(GPIOB, GPIOB_FPGA_IO1);
-    palClearPad(GPIOB, GPIOB_FPGA_IO2);
-    break;
-  case GNSSReceiver::navi_nmea:
-    palSetPad(GPIOB, GPIOB_FPGA_IO1);
-    palClearPad(GPIOB, GPIOB_FPGA_IO2);
-    break;
-  case GNSSReceiver::ublox:
-    palClearPad(GPIOB, GPIOB_FPGA_IO1);
-    palSetPad(GPIOB, GPIOB_FPGA_IO2);
-    break;
-  case GNSSReceiver::unused:
-    palSetPad(GPIOB, GPIOB_FPGA_IO1);
-    palSetPad(GPIOB, GPIOB_FPGA_IO2);
-    break;
-  }
-}
 
 /*
  * Application entry point.
  */
 int main(void) {
 
-  /*
+ /*
   * System initializations.
   * - HAL initialization, this also initializes the configured device drivers
   *   and performs the board-specific initializations.
@@ -326,46 +221,17 @@ int main(void) {
 //    ;
 
   chHeapObjectInit(&ThdHeap, (uint8_t *)MEM_ALIGN_NEXT(link_thd_buf), THREAD_HEAP_SIZE);
-  //uiInit();
+
   osalThreadSleepMilliseconds(100);
 
-  fsmcSramInit();
-  fsmcSramStart(&SRAMD1, &sram_cfg);
-
-//  I2CInitLocal();
-  ADCInitLocal();
-//  tmp75.start();
-//  lsm303mag.start();
-//  npa700.start();
-//  ms5806.start();
-//
-//  mpu6050_power_on();
-//  mpu6050.start();
-//
-//  nvram_power_on();
-//  fram0.start();
-//  fram1.start();
-
-//  idt5.start();
-
-  while (!FPGAReady()) {
-    orange_led_on();
-    osalThreadSleepMilliseconds(30);
-    orange_led_off();
-    osalThreadSleepMilliseconds(70);
-  }
+  fpgaObjectInit(&FPGAD1);
+  fpgaStart(&FPGAD1);
 
 //  while (true) {
 //    fpga_mul_test();
 //  }
 
-  sdStart(&XBEESD, &xbee_ser_cfg);
-
-  membench();
-  gnss_select(GNSSReceiver::ublox);
-  msnoInit();
-
-  //spi_fpga_test();
+//  membench();
 
 //  while (true) {
 //    mem_oscillo_probe_dbg();
@@ -374,22 +240,7 @@ int main(void) {
   /*
    * Normal main() thread activity, in this demo it does nothing.
    */
-  while (TRUE) {
-//    osalThreadSleepMilliseconds(50);
-//    green_led_toggle();
-//
-//    osalThreadSleepMilliseconds(50);
-//    red_led_toggle();
-//
-//    osalThreadSleepMilliseconds(50);
-//    orange_led_toggle();
-
-//    tmp75.get();
-//    npa700.get();
-//    fram0.get();
-//    fram1.get();
-//    ADCgetBoardVoltage();
-    msnoTest(gps_data);
+  while (true) {
 
     memtest();
     green_led_toggle();
@@ -397,10 +248,6 @@ int main(void) {
     red_led_toggle();
     memtest();
     orange_led_toggle();
-
-
-    // serial port for xbee test
-    sdWrite(&XBEESD, (uint8_t *)"test", 5);
   }
 }
 
