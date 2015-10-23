@@ -11,6 +11,14 @@ typedef uint16_t        fpgacmd_t;  /* fpga talks with stm32 using 16-bit words 
 #define FPGA_MTRX_SIZE  1024        /* size of single matrix in double words */
 #define FPGA_MTRX_CNT   7           /* total number of matrix regions */
 
+/* current FPGA firmware limitations */
+#define FPGA_MTRX_MAX_ROW   32
+#define FPGA_MTRX_MAX_COL   32
+
+/* numbers of command slices for differ peripherals */
+#define FPGA_CMD_SLICE_MUL    0
+
+
 /**
  * @brief   Driver state machine possible states.
  */
@@ -37,12 +45,12 @@ struct FPGAMemorySpace {
   /**
    * @brief Command regions.
    */
-  fpgacmd_t     cmd[FPGA_CMD_SIZE][FPGA_CMD_CNT];
+  fpgacmd_t     cmd[FPGA_CMD_SIZE * FPGA_CMD_CNT];
 
   /**
    * @brief Pool for matrix data.
    */
-  double        mtrx[FPGA_MTRX_SIZE][FPGA_MTRX_CNT];
+  double        mtrx[FPGA_MTRX_SIZE * FPGA_MTRX_CNT];
 };
 
 /**
@@ -67,6 +75,7 @@ extern "C" {
   void fpgaObjectInit(FPGADriver *fpgap);
   void fpgaStart(FPGADriver *fpgap);
   void fpgaStop(FPGADriver *fpgap);
+  fpgacmd_t * fpgaGetCmdSlice(const FPGADriver *fpgap, size_t N);
 #ifdef __cplusplus
 }
 #endif

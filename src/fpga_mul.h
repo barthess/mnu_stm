@@ -3,6 +3,10 @@
 
 #include "fpga.h"
 
+/* offsets in command array */
+#define MUL_COMMAND_ADDR      0
+#define MUL_SIZES_ADDR        1
+
 /**
  * @brief   Driver state machine possible states.
  */
@@ -50,9 +54,11 @@ extern MtrxMul MTRXMULD1;
 #ifdef __cplusplus
 extern "C" {
 #endif
-  void MulObjectInit(MtrxMul *mulp);
-  void MulStart(MtrxMul *mulp, const FPGADriver *fpgap);
-  void MulStop(MtrxMul *mulp);
+  void mulObjectInit(MtrxMul *mulp);
+  void mulStart(MtrxMul *mulp, const FPGADriver *fpgap);
+  void mulStop(MtrxMul *mulp);
+  double * mulMtrxSlice(const MtrxMul *mulp, size_t N);
+  void mulMtrxMultiply(MtrxMul *mulp, size_t op0, size_t op1, size_t res, size_t row, size_t col);
 #ifdef __cplusplus
 }
 #endif

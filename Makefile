@@ -125,7 +125,9 @@ CPPSRC = $(CHCPPSRC) \
 		src/adc_local.cpp \
 		src/idt5.cpp \
 		cli/cli.cpp \
-		cli/cli_cmd.cpp
+		cli/cli_cmd.cpp \
+		fpga_mul_test.cpp \
+		fpga_mem_test.cpp
 
 # C sources to be compiled in ARM mode regardless of the global setting.
 # NOTE: Mixing ARM and THUMB mode enables the -mthumb-interwork compiler

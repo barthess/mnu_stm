@@ -1,5 +1,10 @@
+#include <cmath>
+
 #include "main.h"
-#include "mul_test.hpp"
+#include "pads.h"
+
+#include "fpga_mul.h"
+#include "fpga_mem_bench.hpp"
 
 using namespace chibios_rt;
 
@@ -27,12 +32,10 @@ using namespace chibios_rt;
  ******************************************************************************
  */
 
-double op1 = 3.71;
-double op2 = 1.3;
-volatile double result;
-const double step = 0.13;
-size_t wait_cycles = 0;
-double delta;
+static const size_t sram_size = FPGA_MTRX_SIZE * FPGA_MTRX_CNT * sizeof(double);
+
+time_measurement_t mem_tmu_w;
+time_measurement_t mem_tmu_r;
 
 /*
  ******************************************************************************
@@ -43,6 +46,40 @@ double delta;
  */
 
 /*
+ *
+ */
+static void membench(FPGAMemorySpace *memspace) {
+
+  chTMObjectInit(&mem_tmu_r);
+  chTMObjectInit(&mem_tmu_w);
+  double *ptr = memspace->mtrx;
+
+  double pattern = 1.1;
+  for (size_t i=0; i<33*33; i++) {
+    test_buf_mtrx[i] = pattern;
+    pattern += pattern;
+  }
+
+  chTMStartMeasurementX(&mem_tmu_w);
+  for (size_t i=0; i<1000; i++) {
+    for (size_t i=0; i<33*33; i++) {
+      ptr[i] = test_buf_mtrx[i];
+    }
+    //memcpy(memtest_struct.start, test_buf_mtrx, sizeof(test_buf_mtrx));
+  }
+  chTMStopMeasurementX(&mem_tmu_w);
+
+  chTMStartMeasurementX(&mem_tmu_r);
+  for (size_t i=0; i<1000; i++) {
+    for (size_t i=0; i<33*33; i++) {
+      test_buf_mtrx[i] = ptr[i];
+    }
+    //memcpy(test_buf_mtrx, memtest_struct.start, sizeof(test_buf_mtrx));
+  }
+  chTMStopMeasurementX(&mem_tmu_r);
+}
+
+/*
  ******************************************************************************
  * EXPORTED FUNCTIONS
  ******************************************************************************
@@ -51,42 +88,13 @@ double delta;
 /**
  *
  */
-void fpga_mul_test(MtrxMul *mulp) {
+void fpga_mem_bench(FPGAMemorySpace *memspace) {
 
-
-
-  volatile double *ptr = (double *)memtest_struct.start;
-
-  ptr[1] = op1;
-  ptr[2] = op2;
-
-  // wait until data flushed from internal FSMC's fifo
-  while (! FSMCDataFlushed());
-
-  // notify FPGA
-  palSetPad(GPIOB, GPIOB_FPGA_IO2);
-
-  // wait ready pin
-  while (PAL_HIGH != palReadPad(GPIOB, GPIOB_FPGA_IO1));
-
-  // collect result
-  result = ptr[3];
-
-  // reset FPGA state machine to IDLE state
-  palClearPad(GPIOB, GPIOB_FPGA_IO2);
-
-  // wait FPGA reset
-  while (PAL_LOW != palReadPad(GPIOB, GPIOB_FPGA_IO1));
-
-  delta = fabs(result - (op1*op2));
-  if (delta > (double)0.0001)
-    red_led_on();
-
-  wait_cycles = 0;
-  op1 += step;
-  op2 += step + (double)0.0171;
-  if (op1 > 100)
-    op1 = -100;
-  if (op2 > 100)
-    op2 = -100;
+  membench(memspace);
 }
+
+
+
+
+
+
