@@ -1147,6 +1147,7 @@ extern "C" {
 #endif
   void boardInit(void);
   bool FPGAReady(void);
+  bool FPGAMulReady(void);
   bool FSMCDataFlushed(void);
   unsigned int usb_lld_plug_state(void);
   void usb_lld_connect_bus_workaround(void);

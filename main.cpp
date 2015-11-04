@@ -18,6 +18,8 @@
 #include "pads.h"
 
 #include "fpga.h"
+#include "fpga_pwm.h"
+#include "fpga_icu.h"
 #include "fpga_mul_test.hpp"
 #include "fpga_mem_test.hpp"
 
@@ -54,8 +56,8 @@
  */
 
 //typedef uint16_t memword;
-//static volatile memword pattern = 0xFF00;
-//static volatile memword devnull = 0;
+//volatile memword pattern = 0xFF00;
+//volatile memword devnull = 0;
 //void mem_oscillo_probe_dbg(void) {
 //  volatile memword *ptr = (memword *)memtest_struct.start;
 //
@@ -68,6 +70,14 @@
 //  osalSysUnlock();
 //}
 
+void fpga_addr_test(void) {
+  fpgapwmSet(&FPGAPWMD1, 0xFFFF, 2);
+  osalThreadSleepMilliseconds(1);
+  osalDbgCheck(PAL_HIGH == palReadPad(GPIOD, GPIOD_FPGA_IO5));
+  fpgapwmSet(&FPGAPWMD1, 0, 2);
+  osalThreadSleepMilliseconds(1);
+  osalDbgCheck(PAL_LOW == palReadPad(GPIOD, GPIOD_FPGA_IO5));
+}
 
 /*
  ******************************************************************************
@@ -107,13 +117,46 @@ int main(void) {
 
   fpgaObjectInit(&FPGAD1);
   fpgaStart(&FPGAD1);
+
+  fpga_mem_test(&FPGAD1, 6);
+
+  mulObjectInit(&MTRXMULD1);
   mulStart(&MTRXMULD1, &FPGAD1);
 
-  //fpga_mem_test(&FPGAD1, 6);
+  fpgapwmObjectInit(&FPGAPWMD1);
+  fpgapwmStart(&FPGAPWMD1, &FPGAD1);
+
+  fpgaicuObjectInit(&FPGAICUD1);
+  fpgaicuStart(&FPGAICUD1, &FPGAD1);
+
+  fpgacmd_t pwm_val = 0;
+  fpgacmd_t icu_val = 0;
+
+//  while (true) {
+//    fpga_addr_test();
+//  }
+
 
   while (true) {
-    fpga_mul_test(&MTRXMULD1);
+    for (size_t i=0; i<16; i++) {
+      fpgapwmSet(&FPGAPWMD1, 1000 * (i+1), i);
+      //icu_val = fpgaicuRead(&FPGAICUD1, 0);
+    }
+    pwm_val++;
+    if (pwm_val > 1000)
+      pwm_val = 0;
+
+    osalThreadSleepMilliseconds(1);
+
+    //icu_val = fpgaicuRead(&FPGAICUD1, 0);
   }
+
+
+//  while (true) {
+//    fpga_mul_test(&MTRXMULD1);
+//    orange_led_toggle();
+//    osalThreadSleepMilliseconds(50);
+//  }
 }
 
 

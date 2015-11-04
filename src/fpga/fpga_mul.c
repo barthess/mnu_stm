@@ -102,8 +102,31 @@ void mulMtrxMultiply(MtrxMul *mulp, size_t op0, size_t op1, size_t res, size_t r
 
   /* order is important
      operands' addresses and multiplication flag must be written at very last order */
-  mulp->cmd[1] = (col << 8) | (row << 0);
-  mulp->cmd[0] = (1 << 15)  | (res << 6) | (op1 << 3) | (op0 << 0);
+  mulp->cmd[2] = (col << 8) | (row << 0);
+  mulp->cmd[1] = (1 << 15)  | (res << 6) | (op1 << 3) | (op0 << 0);
+
+  for (size_t i=0; i<512; i++) {
+    mulp->cmd[i] = -1;
+    osalThreadSleepMilliseconds(1);
+    if (FPGAMulReady()) {
+      osalSysHalt("");
+    }
+
+    mulp->cmd[i] = -1;
+    osalThreadSleepMilliseconds(1);
+    if (FPGAMulReady()) {
+      osalSysHalt("");
+    }
+  }
+
+//  for (size_t i=0; i<2048*7; i++) {
+//    uint64_t *ptr = &mulp->mtrx[i];
+//    ptr[0] = -1;
+//    osalThreadSleepMilliseconds(1);
+//    if (FPGAMulReady()) {
+//      osalSysHalt("");
+//    }
+//  }
 
   /* wait FPGA */
   while (0 != mulp->cmd[MUL_COMMAND_ADDR]);

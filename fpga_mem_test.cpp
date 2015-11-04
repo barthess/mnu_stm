@@ -87,7 +87,10 @@ static void memtest(void) {
  */
 void fpga_mem_test(FPGADriver *fpgap, size_t turns) {
 
+  osalDbgCheck(fpgap->state == FPGA_READY);
+
   memtest_struct.start = fpgap->memspace->mtrx;
+  //memtest_struct.start = fpgap->memspace;
 
   while (turns--) {
     memtest();

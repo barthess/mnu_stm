@@ -30,7 +30,7 @@ endif
 
 # Enable this if you want link time optimizations (LTO)
 ifeq ($(USE_LTO),)
-  USE_LTO = no
+  USE_LTO = yes
 endif
 
 # If enabled, this option allows to compile the application in THUMB mode.
@@ -111,8 +111,10 @@ CSRC = $(STARTUPSRC) \
        $(CHIBIOS)/os/hal/lib/streams/memstreams.c \
        board/board.c \
        src/microrl.c \
-       src/fpga.c \
-       src/fpga_mul.c \
+       src/fpga/fpga.c \
+       src/fpga/fpga_mul.c \
+       src/fpga/fpga_pwm.c \
+       src/fpga/fpga_icu.c
 	
 # C++ sources that can be compiled in ARM or THUMB mode depending on the global
 # setting.
@@ -161,7 +163,8 @@ INCDIR = $(STARTUPINC) $(KERNINC) $(PORTINC) $(OSALINC) \
          cli \
          board \
          mavlink/C \
-         src
+         src \
+         src/fpga
 
 #
 # Project, sources and paths

@@ -57,21 +57,19 @@ double delta;
  *
  */
 void fpga_mul_test(MtrxMul *mulp) {
-
   double *ptr0 = mulMtrxSlice(mulp, 0);
   double *ptr1 = mulMtrxSlice(mulp, 1);
   double *ptr2 = mulMtrxSlice(mulp, 2);
 
-  ptr0[0] = op0;
-  ptr1[0] = op1;
-  ptr2[0] = op0;
+  ptr0[1023] = op0;
+  ptr1[1023] = op1;
 
   result = op0 * op1;
 
-  mulMtrxMultiply(mulp, 0, 1, 2, 10, 10);
+  mulMtrxMultiply(mulp, 0, 1, 2, 1, 1);
 
   // collect result
-  result = ptr2[0];
+  result = ptr2[1023];
 
   delta = fabs(result - (op0*op1));
   if (delta > (double)0.0001) {

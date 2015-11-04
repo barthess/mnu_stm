@@ -111,6 +111,10 @@ bool FPGAReady(void) {
   return PAL_LOW == palReadPad(GPIOC, GPIOC_FPGA_IO3);
 }
 
+bool FPGAMulReady(void) {
+  return PAL_HIGH == palReadPad(GPIOD, GPIOD_FPGA_IO5);
+}
+
 bool FSMCDataFlushed(void) {
   return PAL_LOW == palReadPad(GPIOD, GPIOD_MEM_NE1);
 }
