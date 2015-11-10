@@ -85,10 +85,6 @@ void fpga_addr_test(void) {
  ******************************************************************************
  */
 
-/* heap for temporarily threads */
-memory_heap_t ThdHeap;
-static uint8_t link_thd_buf[THREAD_HEAP_SIZE + sizeof(stkalign_t)];
-
 /*
  * Application entry point.
  */
@@ -111,17 +107,15 @@ int main(void) {
 //  while (! SYSCFG->CMPCR & SYSCFG_CMPCR_READY)
 //    ;
 
-  chHeapObjectInit(&ThdHeap, (uint8_t *)MEM_ALIGN_NEXT(link_thd_buf), THREAD_HEAP_SIZE);
-
   osalThreadSleepMilliseconds(100);
 
   fpgaObjectInit(&FPGAD1);
   fpgaStart(&FPGAD1);
 
-  fpga_mem_test(&FPGAD1, 6);
+//  fpga_memtest(&FPGAD1, -1);
 
-  mulObjectInit(&MTRXMULD1);
-  mulStart(&MTRXMULD1, &FPGAD1);
+//  mulObjectInit(&MTRXMULD1);
+//  mulStart(&MTRXMULD1, &FPGAD1);
 
   fpgapwmObjectInit(&FPGAPWMD1);
   fpgapwmStart(&FPGAPWMD1, &FPGAD1);
@@ -130,7 +124,7 @@ int main(void) {
   fpgaicuStart(&FPGAICUD1, &FPGAD1);
 
   fpgacmd_t pwm_val = 0;
-  fpgacmd_t icu_val = 0;
+  fpgacmd_t icu_val[5];
 
 //  while (true) {
 //    fpga_addr_test();
@@ -138,19 +132,31 @@ int main(void) {
 
 
   while (true) {
+    //fpgapwmSet(&FPGAPWMD1, pwm_val, 1);
     for (size_t i=0; i<16; i++) {
-      fpgapwmSet(&FPGAPWMD1, 1000 * (i+1), i);
+      fpgapwmSet(&FPGAPWMD1, 1000*i + 1, i);
+//      fpgapwmSet(&FPGAPWMD1, pwm_val, i);
       //icu_val = fpgaicuRead(&FPGAICUD1, 0);
     }
+    osalThreadSleepMilliseconds(1);
     pwm_val++;
-    if (pwm_val > 1000)
+    if (pwm_val > 2000)
       pwm_val = 0;
 
-    osalThreadSleepMilliseconds(1);
+//    fpgapwmSet(&FPGAPWMD1, 1500, 0);
+//    osalThreadSleepMilliseconds(500);
+//    fpgapwmSet(&FPGAPWMD1, 1600, 0);
+//    osalThreadSleepMilliseconds(500);
+//    fpgapwmSet(&FPGAPWMD1, 1400, 0);
+//    osalThreadSleepMilliseconds(500);
 
-    //icu_val = fpgaicuRead(&FPGAICUD1, 0);
+    icu_val[0] = FPGAPWMD1.pwm[256];
+    icu_val[1] = FPGAPWMD1.pwm[257];
+    icu_val[2] = FPGAPWMD1.pwm[258];
+    icu_val[3] = FPGAPWMD1.pwm[259];
+
+    green_led_toggle();
   }
-
 
 //  while (true) {
 //    fpga_mul_test(&MTRXMULD1);

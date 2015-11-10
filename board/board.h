@@ -754,7 +754,7 @@
                                      PIN_MODE_INPUT(GPIOF_PIN7) |             \
                                      PIN_MODE_INPUT(GPIOF_PIN8) |             \
                                      PIN_MODE_INPUT(GPIOF_PIN9) |             \
-                                     PIN_MODE_INPUT(GPIOF_FPGA_IO6) |         \
+                                     PIN_MODE_OUTPUT(GPIOF_FPGA_IO6) |        \
                                      PIN_MODE_INPUT(GPIOF_FPGA_IO13) |        \
                                      PIN_MODE_ALTERNATE(GPIOF_MEM_A6) |       \
                                      PIN_MODE_ALTERNATE(GPIOF_MEM_A7) |       \
@@ -786,7 +786,7 @@
                                      PIN_OSPEED_100M(GPIOF_PIN7) |            \
                                      PIN_OSPEED_100M(GPIOF_PIN8) |            \
                                      PIN_OSPEED_100M(GPIOF_PIN9) |            \
-                                     PIN_OSPEED_100M(GPIOF_FPGA_IO6) |        \
+                                     PIN_OSPEED_2M(GPIOF_FPGA_IO6) |          \
                                      PIN_OSPEED_100M(GPIOF_FPGA_IO13) |       \
                                      PIN_OSPEED_100M(GPIOF_MEM_A6) |          \
                                      PIN_OSPEED_100M(GPIOF_MEM_A7) |          \
@@ -802,7 +802,7 @@
                                      PIN_PUPDR_FLOATING(GPIOF_PIN7) |         \
                                      PIN_PUPDR_FLOATING(GPIOF_PIN8) |         \
                                      PIN_PUPDR_FLOATING(GPIOF_PIN9) |         \
-                                     PIN_PUPDR_FLOATING(GPIOF_FPGA_IO6) |     \
+                                     PIN_PUPDR_PULLDOWN(GPIOF_FPGA_IO6) |     \
                                      PIN_PUPDR_FLOATING(GPIOF_FPGA_IO13) |    \
                                      PIN_PUPDR_FLOATING(GPIOF_MEM_A6) |       \
                                      PIN_PUPDR_FLOATING(GPIOF_MEM_A7) |       \
@@ -818,7 +818,7 @@
                                      PIN_ODR_HIGH(GPIOF_PIN7) |               \
                                      PIN_ODR_HIGH(GPIOF_PIN8) |               \
                                      PIN_ODR_HIGH(GPIOF_PIN9) |               \
-                                     PIN_ODR_HIGH(GPIOF_FPGA_IO6) |           \
+                                     PIN_ODR_LOW(GPIOF_FPGA_IO6) |            \
                                      PIN_ODR_HIGH(GPIOF_FPGA_IO13) |          \
                                      PIN_ODR_HIGH(GPIOF_MEM_A6) |             \
                                      PIN_ODR_HIGH(GPIOF_MEM_A7) |             \
