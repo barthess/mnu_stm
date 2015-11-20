@@ -14,7 +14,7 @@ using namespace chibios_rt;
  * DEFINES
  ******************************************************************************
  */
-#define BRAM_DEPTH    65536
+#define BRAM_DEPTH    (65536 * 1)
 #define BRAM_WIDTH    2 // width in bytes
 
 /*
@@ -92,7 +92,7 @@ static void memtest(memtest_t *testp) {
 /*
  *
  */
-static void running_fire(memtest_t *testp) {
+static void running_lights(memtest_t *testp) {
 
   FPGAMemFill(false);
   osalThreadSleep(1);
@@ -156,7 +156,7 @@ void fpga_memtest(FPGADriver *fpgap, size_t turns) {
 
   while (turns--) {
     /* general memtest without FPGA participating */
-    running_fire(&memtest_struct);
+    running_lights(&memtest_struct);
 
     /* FPGA assisted tests */
     zero_addr_match(&memtest_struct);
@@ -170,4 +170,25 @@ void fpga_memtest(FPGADriver *fpgap, size_t turns) {
 
 
 
+typedef uint16_t memword;
+volatile memword pattern = 0xFF00;
+volatile memword devnull = 0;
+void fpga_memtest_oscillo_probe(FPGADriver *fpgap) {
+  volatile memword *ptr = (memword *)fpgap->memspace;
+
+  FPGAMemFill(false);
+  osalThreadSleep(1);
+
+  while (true) {
+    osalSysLock();
+    ptr[0] = pattern;
+    ptr[1] = ~pattern;
+    port_rt_get_counter_value();
+    devnull = ptr[0];
+    devnull = ptr[1];
+    osalSysUnlock();
+
+    osalThreadSleep(1);
+  }
+}
 

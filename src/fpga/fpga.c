@@ -30,12 +30,12 @@ static const SRAMConfig sram_cfg = {
 
     // BTR
     (0 << 24) | // DATLAT
-    (2 << 20) | // CLKDIV (0 is not supported, max == 15)
+    (1 << 20) | // CLKDIV (0 is not supported, max == 15)
     (0 << 16),  // BUSTURN
 
     // BWTR
     (0 << 24) | // DATLAT
-    (2 << 20) | // CLKDIV (0 is not supported, max == 15)
+    (1 << 20) | // CLKDIV (0 is not supported, max == 15)
     (0 << 16),  // BUSTURN
 };
 

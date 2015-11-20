@@ -55,30 +55,6 @@
  ******************************************************************************
  */
 
-//typedef uint16_t memword;
-//volatile memword pattern = 0xFF00;
-//volatile memword devnull = 0;
-//void mem_oscillo_probe_dbg(void) {
-//  volatile memword *ptr = (memword *)memtest_struct.start;
-//
-//  osalSysLock();
-//  ptr[0] = pattern;
-////  ptr[1] = ~pattern;
-////  port_rt_get_counter_value();
-////  devnull = ptr[0];
-////  devnull = ptr[1];
-//  osalSysUnlock();
-//}
-
-void fpga_addr_test(void) {
-  fpgapwmSet(&FPGAPWMD1, 0xFFFF, 2);
-  osalThreadSleepMilliseconds(1);
-  osalDbgCheck(PAL_HIGH == palReadPad(GPIOD, GPIOD_FPGA_IO5));
-  fpgapwmSet(&FPGAPWMD1, 0, 2);
-  osalThreadSleepMilliseconds(1);
-  osalDbgCheck(PAL_LOW == palReadPad(GPIOD, GPIOD_FPGA_IO5));
-}
-
 /*
  ******************************************************************************
  * EXPORTED FUNCTIONS
@@ -112,7 +88,8 @@ int main(void) {
   fpgaObjectInit(&FPGAD1);
   fpgaStart(&FPGAD1);
 
-//  fpga_memtest(&FPGAD1, -1);
+  //fpga_memtest_oscillo_probe(&FPGAD1);
+  fpga_memtest(&FPGAD1, -1);
 
 //  mulObjectInit(&MTRXMULD1);
 //  mulStart(&MTRXMULD1, &FPGAD1);
