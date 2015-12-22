@@ -3,23 +3,21 @@
 
 #include "fsmc_sram.h"
 
-typedef uint16_t        fpgacmd_t;  /* fpga talks with stm32 using 16-bit words */
+typedef uint16_t        fpgaword_t;         /* fpga talks with stm32 using 16-bit words */
 
-#define FPGA_CMD_SIZE   512         /* size of single command region in cmd_words */
-#define FPGA_CMD_CNT    8           /* total number of command regions */
-
-#define FPGA_MTRX_SIZE  1024        /* size of single matrix in double words */
-#define FPGA_MTRX_CNT   7           /* total number of matrix regions */
+#define FPGA_WB_SLICE_SIZE   65536    /* address space size single wishbone slice in fpga_words */
+#define FPGA_WB_SLICE_CNT    8        /* total number of slices */
 
 /* current FPGA firmware limitations */
 #define FPGA_MTRX_MAX_ROW   32
 #define FPGA_MTRX_MAX_COL   32
+#define FPGA_MTRX_CNT       4
 
-/* numbers of command slices for differ peripherals */
-#define FPGA_CMD_SLICE_PWM    0
-#define FPGA_CMD_SLICE_MUL    1
-
-
+/* IDs of command slices for differ peripherals */
+#define FPGA_WB_SLICE_MEMTEST     0
+#define FPGA_WB_SLICE_LED         1
+#define FPGA_WB_SLICE_RESERVED    2
+#define FPGA_WB_SLICE_MUL         3 /* all recent slices is for 4 matrix data storage */
 
 /**
  * @brief   Driver state machine possible states.
@@ -33,34 +31,14 @@ typedef enum {
 /**
  *
  */
-typedef struct FPGAMemorySpace FPGAMemorySpace;
-
-/**
- *
- */
 typedef struct FPGADriver FPGADriver;
-
-/**
- * @brief   Structure representing an FPGA driver.
- */
-struct FPGAMemorySpace {
-  /**
-   * @brief Command regions.
-   */
-  fpgacmd_t     cmd[FPGA_CMD_SIZE * FPGA_CMD_CNT];
-
-  /**
-   * @brief Pool for matrix data.
-   */
-  double        mtrx[FPGA_MTRX_SIZE * FPGA_MTRX_CNT];
-};
 
 /**
  * @brief   Structure handling matrix multiplier.
  */
 struct FPGADriver {
-  FPGAMemorySpace   *memspace;
-  fpgastate_t       state;
+  fpgaword_t  *memspace;
+  fpgastate_t state;
 };
 
 /**
@@ -77,7 +55,7 @@ extern "C" {
   void fpgaObjectInit(FPGADriver *fpgap);
   void fpgaStart(FPGADriver *fpgap);
   void fpgaStop(FPGADriver *fpgap);
-  fpgacmd_t * fpgaGetCmdSlice(const FPGADriver *fpgap, size_t N);
+  fpgaword_t * fpgaGetCmdSlice(const FPGADriver *fpgap, size_t N);
 #ifdef __cplusplus
 }
 #endif

@@ -42,7 +42,6 @@ static memtest_t memtest_struct = {
     nullptr,
     sram_size,
     MEMTEST_WIDTH_64 | MEMTEST_WIDTH_32 | MEMTEST_WIDTH_16,
-    //MEMTEST_WIDTH_8,
     mem_error_cb
 };
 
@@ -85,31 +84,54 @@ static void mem_error_cb(memtest_t *memp, testtype type, size_t index,
 /*
  *
  */
-static void memtest(memtest_t *testp) {
+static void memtest(memtest_t *testp, time_measurement_t *memtest_tmp) {
+  chTMStartMeasurementX(memtest_tmp);
   memtest_run(testp, MEMTEST_RUN_ALL);
+  chTMStopMeasurementX(memtest_tmp);
 }
 
 /*
  *
  */
-static void running_lights(memtest_t *testp) {
+static void running_lights(memtest_t *testp, time_measurement_t *memtest_tmp) {
 
   FPGAMemFill(false);
   osalThreadSleep(1);
 
-  memtest(testp);
+  memtest(testp, memtest_tmp);
   green_led_toggle();
-  memtest(testp);
+  memtest(testp, memtest_tmp);
   red_led_toggle();
-  memtest(testp);
+  memtest(testp, memtest_tmp);
   orange_led_toggle();
 }
 
 /*
  *
  */
+void chipscope_test(memtest_t *testp, size_t turns) {
+  volatile uint16_t *mem_array = (uint16_t *)testp->start;
+  uint16_t tmp;
+
+  FPGAMemFill(false);
+
+  while(turns--) {
+    osalSysPolledDelayX(10);
+    mem_array[0] = 0x55AA;
+    mem_array[1] = 0x1111;
+
+    osalSysPolledDelayX(10);
+    tmp = mem_array[0];
+    tmp = mem_array[1];
+  }
+  (void)tmp;
+}
+
+/*
+ *
+ */
 static void zero_addr_match(memtest_t *testp) {
-  uint16_t *mem_array = (uint16_t *)testp->start;
+  volatile uint16_t *mem_array = (uint16_t *)testp->start;
 
   FPGAMemFill(false);
   osalThreadSleep(1);
@@ -127,8 +149,8 @@ static void zero_addr_match(memtest_t *testp) {
  *
  */
 static void fpga_own_addr(memtest_t *testp) {
-  uint16_t *mem_array = (uint16_t *)testp->start;
-  uint16_t read;
+  volatile uint16_t *mem_array = (uint16_t *)testp->start;
+  volatile uint16_t read;
 
   FPGAMemFill(true);
   osalThreadSleepMilliseconds(10); // wait until FPGA fills all BRAM array
@@ -153,19 +175,23 @@ void fpga_memtest(FPGADriver *fpgap, size_t turns) {
   osalDbgCheck(fpgap->state == FPGA_READY);
 
   memtest_struct.start = fpgap->memspace;
+  time_measurement_t memtest_tm;
+  chTMObjectInit(&memtest_tm);
 
   while (turns--) {
-    /* general memtest without FPGA participating */
-    running_lights(&memtest_struct);
-
     /* FPGA assisted tests */
-    zero_addr_match(&memtest_struct);
     fpga_own_addr(&memtest_struct);
+    zero_addr_match(&memtest_struct);
+
+    /* general memtest without FPGA participating */
+    running_lights(&memtest_struct, &memtest_tm);
   }
 
   green_led_off();
   red_led_off();
   orange_led_off();
+
+  chipscope_test(&memtest_struct, -1);
 }
 
 

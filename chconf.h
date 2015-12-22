@@ -483,8 +483,11 @@
  * @details This hook is invoked in case to a system halting error before
  *          the system is halted.
  */
+#define is_under_debugger()   (((CoreDebug)->DHCSR) & CoreDebug_DHCSR_C_DEBUGEN_Msk)
 #define CH_CFG_SYSTEM_HALT_HOOK(reason) {                                   \
-  /* System halt code here.*/                                               \
+  if (is_under_debugger()){                                                 \
+     __asm("BKPT #0\n") ;                                                   \
+  }                                                                         \
 }
 
 /** @} */

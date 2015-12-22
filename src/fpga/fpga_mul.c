@@ -55,8 +55,8 @@ void mulStart(MtrxMul *mulp, const FPGADriver *fpgap) {
 
   osalDbgCheck(fpgap->state == FPGA_READY);
 
-  mulp->cmd  = fpgaGetCmdSlice(fpgap, FPGA_CMD_SLICE_MUL);
-  mulp->mtrx = fpgap->memspace->mtrx;
+  mulp->cmd  = fpgaGetCmdSlice(fpgap, FPGA_WB_SLICE_MUL);
+  mulp->mtrx = NULL; osalSysHalt("FIXME!");
 
   for (size_t i=0; i<FPGA_MTRX_CNT; i++) {
     mulp->empty |= 1 << i;
@@ -85,7 +85,8 @@ double * mulMtrxSlice(const MtrxMul *mulp, size_t N) {
   osalDbgCheck(mulp->state == MTRXMUL_READY);
   osalDbgCheck(N < FPGA_MTRX_CNT);
 
-  return & mulp->mtrx[N * FPGA_MTRX_SIZE];
+  osalSysHalt("FIXME!");
+  return NULL;
 }
 
 /**

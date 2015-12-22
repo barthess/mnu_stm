@@ -5,7 +5,7 @@
 
 # Compiler options here.
 ifeq ($(USE_OPT),)
-  USE_OPT = -O0 -ggdb -fomit-frame-pointer -falign-functions=16
+  USE_OPT = -O3 -ggdb -fomit-frame-pointer -falign-functions=16
 endif
 
 # C specific options here (added to USE_OPT).
@@ -30,7 +30,7 @@ endif
 
 # Enable this if you want link time optimizations (LTO)
 ifeq ($(USE_LTO),)
-  USE_LTO = yes
+  USE_LTO = no
 endif
 
 # If enabled, this option allows to compile the application in THUMB mode.
@@ -111,25 +111,21 @@ CSRC = $(STARTUPSRC) \
        $(CHIBIOS)/os/hal/lib/streams/memstreams.c \
        board/board.c \
        src/microrl.c \
-       src/fpga/fpga.c \
-       src/fpga/fpga_mul.c \
-       src/fpga/fpga_pwm.c \
-       src/fpga/fpga_icu.c
+       src/fpga/fpga.c
 	
 # C++ sources that can be compiled in ARM or THUMB mode depending on the global
 # setting.
 CPPSRC = $(CHCPPSRC) \
-		main.cpp \
+		main_memtest.cpp \
 		$(CHIBIOS_CONTRIB)/os/various/memtest.cpp \
 		src/i2c_local.cpp \
 		src/i2c_sensor.cpp \
 		src/tmp75.cpp \
 		src/adc_local.cpp \
-		src/idt5.cpp \
 		cli/cli.cpp \
 		cli/cli_cmd.cpp \
-		fpga_mul_test.cpp \
-		fpga_mem_test.cpp
+		src/fpga/test/fpga_mul_test.cpp \
+		src/fpga/test/fpga_mem_test.cpp
 
 # C sources to be compiled in ARM mode regardless of the global setting.
 # NOTE: Mixing ARM and THUMB mode enables the -mthumb-interwork compiler
@@ -164,7 +160,8 @@ INCDIR = $(STARTUPINC) $(KERNINC) $(PORTINC) $(OSALINC) \
          board \
          mavlink/C \
          src \
-         src/fpga
+         src/fpga \
+         src/fpga/test
 
 #
 # Project, sources and paths

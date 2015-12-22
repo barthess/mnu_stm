@@ -23,38 +23,36 @@ FPGADriver FPGAD1;
  ******************************************************************************
  */
 
-// sync variant
-static const SRAMConfig sram_cfg = {
-    (FSMC_BCR_MWID_16 | FSMC_BCR_MTYP_PSRAM | FSMC_BCR_BURSTEN |
-        FSMC_BCR_WREN | FSMC_BCR_CBURSTRW | FSMC_BCR_WAITPOL),
-
-    // BTR
-    (0 << 24) | // DATLAT
-    (1 << 20) | // CLKDIV (0 is not supported, max == 15)
-    (0 << 16),  // BUSTURN
-
-    // BWTR
-    (0 << 24) | // DATLAT
-    (1 << 20) | // CLKDIV (0 is not supported, max == 15)
-    (0 << 16),  // BUSTURN
-};
-
-// async variant
+// sync
 //static const SRAMConfig sram_cfg = {
-//    (FSMC_BCR_MWID_16 | FSMC_BCR_MTYP_SRAM | FSMC_BCR_WREN | FSMC_BCR_EXTMOD),
+//    (FSMC_BCR_MWID_16 | FSMC_BCR_MTYP_PSRAM | FSMC_BCR_BURSTEN |
+//        FSMC_BCR_WREN | FSMC_BCR_CBURSTRW | FSMC_BCR_WAITPOL),
 //
 //    // BTR
-//    (6 << 16) | // BUSTURN
-//    (12 << 8) |  // DATAST
-//    (0 << 4) |  // ADDHLD
-//    (0 << 0),   // ADDSET
+//    (0 << 24) | // DATLAT
+//    (1 << 20) | // CLKDIV (0 is not supported, max == 15)
+//    (0 << 16),  // BUSTURN
 //
 //    // BWTR
-//    (6 << 16) | // BUSTURN
-//    (9 << 8) |  // DATAST
-//    (0 << 4) |  // ADDHLD
-//    (0 << 0),   // ADDSET
+//    (0 << 24) | // DATLAT
+//    (1 << 20) | // CLKDIV (0 is not supported, max == 15)
+//    (0 << 16),  // BUSTURN
 //};
+
+// async
+static const SRAMConfig sram_cfg = {
+    (FSMC_BCR_MWID_16 | FSMC_BCR_MTYP_SRAM | FSMC_BCR_WREN | FSMC_BCR_EXTMOD),
+
+    // BTR
+    (0 << 16) | // BUSTURN (min = 0)
+    (7 << 8) |  // DATAST (min = 1)
+    (0 << 0),   // ADDSET (min = 0)
+
+    // BWTR
+    (0 << 16) | // BUSTURN
+    (2 << 8) |  // DATAST
+    (0 << 0),   // ADDSET
+};
 
 /*
  ******************************************************************************
@@ -98,7 +96,7 @@ void fpgaStart(FPGADriver *fpgap) {
     osalThreadSleepMilliseconds(70);
   }
 
-  fpgap->memspace = (FPGAMemorySpace *)FSMC_Bank1_1_MAP;
+  fpgap->memspace = (fpgaword_t *)FSMC_Bank1_1_MAP;
   fpgap->state = FPGA_READY;
 }
 
@@ -113,8 +111,8 @@ void fpgaStop(FPGADriver *fpgap) {
 /**
  *
  */
-fpgacmd_t * fpgaGetCmdSlice(const FPGADriver *fpgap, size_t N) {
-  osalDbgCheck(N < FPGA_CMD_CNT);
-  return & fpgap->memspace->cmd[N * FPGA_CMD_SIZE];
+fpgaword_t * fpgaGetCmdSlice(const FPGADriver *fpgap, size_t N) {
+  osalDbgCheck(N < FPGA_WB_SLICE_CNT);
+  return & fpgap->memspace[N * FPGA_WB_SLICE_SIZE];
 }
 

@@ -28,7 +28,7 @@ struct MtrxMul {
   /**
    * @brief   Command region.
    */
-  fpgacmd_t       *cmd;
+  fpgaword_t      *cmd;
   /**
    * @brief   Pool for matrix data.
    */

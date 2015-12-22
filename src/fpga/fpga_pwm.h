@@ -23,7 +23,7 @@ typedef struct FpgaPwm FpgaPwm;
  * @brief   Structure.
  */
 struct FpgaPwm {
-  fpgacmd_t       *pwm;
+  fpgaword_t      *pwm;
   fpgapwmstate_t  state;
 };
 
@@ -41,7 +41,7 @@ extern "C" {
   void fpgapwmObjectInit(FpgaPwm *pwmp);
   void fpgapwmStart(FpgaPwm *pwmp, const FPGADriver *fpgap);
   void fpgapwmStop(FpgaPwm *pwmp);
-  void fpgapwmSet(FpgaPwm *pwmp, fpgacmd_t val, size_t N);
+  void fpgapwmSet(FpgaPwm *pwmp, fpgaword_t val, size_t N);
 #ifdef __cplusplus
 }
 #endif
