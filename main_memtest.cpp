@@ -19,6 +19,7 @@
 
 #include "fpga.h"
 #include "fpga_mem_test.hpp"
+#include "fpga_led_test.hpp"
 
 /*
  ******************************************************************************
@@ -86,6 +87,7 @@ int main(void) {
   fpgaStart(&FPGAD1);
 
   //fpga_memtest_oscillo_probe(&FPGAD1);
+  fpga_led_test(&FPGAD1, -1);
   fpga_memtest(&FPGAD1, -1);
 
   while (true) {

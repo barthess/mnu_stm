@@ -124,7 +124,7 @@ CPPSRC = $(CHCPPSRC) \
 		src/adc_local.cpp \
 		cli/cli.cpp \
 		cli/cli_cmd.cpp \
-		src/fpga/test/fpga_mul_test.cpp \
+		src/fpga/test/fpga_led_test.cpp \
 		src/fpga/test/fpga_mem_test.cpp
 
 # C sources to be compiled in ARM mode regardless of the global setting.
