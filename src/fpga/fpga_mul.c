@@ -109,13 +109,13 @@ void mulMtrxMultiply(MtrxMul *mulp, size_t op0, size_t op1, size_t res, size_t r
   for (size_t i=0; i<512; i++) {
     mulp->cmd[i] = -1;
     osalThreadSleepMilliseconds(1);
-    if (FPGAMulReady()) {
+    if (FPGAbramDbgOk()) {
       osalSysHalt("");
     }
 
     mulp->cmd[i] = -1;
     osalThreadSleepMilliseconds(1);
-    if (FPGAMulReady()) {
+    if (FPGAbramDbgOk()) {
       osalSysHalt("");
     }
   }

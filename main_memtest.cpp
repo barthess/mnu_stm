@@ -86,8 +86,7 @@ int main(void) {
   fpgaObjectInit(&FPGAD1);
   fpgaStart(&FPGAD1);
 
-  //fpga_memtest_oscillo_probe(&FPGAD1);
-  fpga_led_test(&FPGAD1, -1);
+  //fpga_led_test(&FPGAD1, -1);
   fpga_memtest(&FPGAD1, -1);
 
   while (true) {

@@ -14,7 +14,7 @@ using namespace chibios_rt;
  * DEFINES
  ******************************************************************************
  */
-#define BRAM_DEPTH    (65536 * 1)
+#define BRAM_DEPTH    (32768 * 1)
 #define BRAM_WIDTH    2 // width in bytes
 
 /*
@@ -56,16 +56,6 @@ static memtest_t memtest_struct = {
 /*
  *
  */
-void FPGAMemFill(bool enable) {
-  if (enable)
-    palSetPad(GPIOF, GPIOF_FPGA_IO6);
-  else
-    palClearPad(GPIOF, GPIOF_FPGA_IO6);
-}
-
-/*
- *
- */
 static void mem_error_cb(memtest_t *memp, testtype type, size_t index,
                           size_t width, uint32_t got, uint32_t expect) {
   (void)memp;
@@ -95,7 +85,7 @@ static void memtest(memtest_t *testp, time_measurement_t *memtest_tmp) {
  */
 static void running_lights(memtest_t *testp, time_measurement_t *memtest_tmp) {
 
-  FPGAMemFill(false);
+  FPGAMemAutoFill(false);
   osalThreadSleep(1);
 
   memtest(testp, memtest_tmp);
@@ -113,7 +103,7 @@ void chipscope_test(memtest_t *testp, size_t turns) {
   volatile uint16_t *mem_array = (uint16_t *)testp->start;
   uint16_t tmp;
 
-  FPGAMemFill(false);
+  FPGAMemAutoFill(false);
 
   while(turns--) {
     osalSysPolledDelayX(10);
@@ -133,16 +123,16 @@ void chipscope_test(memtest_t *testp, size_t turns) {
 static void zero_addr_match(memtest_t *testp) {
   volatile uint16_t *mem_array = (uint16_t *)testp->start;
 
-  FPGAMemFill(false);
+  FPGAMemAutoFill(false);
   osalThreadSleep(1);
 
   mem_array[0] = 0x55AA;
   osalThreadSleep(1);
-  osalDbgCheck(true == FPGAMulReady());
+  osalDbgCheck(true == FPGAbramDbgOk());
 
   mem_array[0] = 0x55AB;
   osalThreadSleep(1);
-  osalDbgCheck(false == FPGAMulReady());
+  osalDbgCheck(false == FPGAbramDbgOk());
 }
 
 /*
@@ -152,7 +142,7 @@ static void fpga_own_addr(memtest_t *testp) {
   volatile uint16_t *mem_array = (uint16_t *)testp->start;
   volatile uint16_t read;
 
-  FPGAMemFill(true);
+  FPGAMemAutoFill(true);
   osalThreadSleepMilliseconds(10); // wait until FPGA fills all BRAM array
 
   for (size_t i=0; i<BRAM_DEPTH; i++) {
@@ -180,8 +170,8 @@ void fpga_memtest(FPGADriver *fpgap, size_t turns) {
 
   while (turns--) {
     /* FPGA assisted tests */
-    fpga_own_addr(&memtest_struct);
     zero_addr_match(&memtest_struct);
+    fpga_own_addr(&memtest_struct);
 
     /* general memtest without FPGA participating */
     running_lights(&memtest_struct, &memtest_tm);
@@ -202,7 +192,7 @@ volatile memword devnull = 0;
 void fpga_memtest_oscillo_probe(FPGADriver *fpgap) {
   volatile memword *ptr = (memword *)fpgap->memspace;
 
-  FPGAMemFill(false);
+  FPGAMemAutoFill(false);
   osalThreadSleep(1);
 
   while (true) {

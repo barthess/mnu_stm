@@ -45,12 +45,12 @@ static const SRAMConfig sram_cfg = {
 
     // BTR
     (0 << 16) | // BUSTURN (min = 0)
-    (7 << 8) |  // DATAST (min = 1)
+    (7 << 8)  | // DATAST (min = 1)
     (0 << 0),   // ADDSET (min = 0)
 
     // BWTR
     (0 << 16) | // BUSTURN
-    (2 << 8) |  // DATAST
+    (2 << 8)  | // DATAST
     (0 << 0),   // ADDSET
 };
 
