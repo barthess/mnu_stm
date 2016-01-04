@@ -112,7 +112,7 @@ bool FPGAReady(void) {
 }
 
 bool FPGAbramDbgOk(void) {
-  return PAL_HIGH == palReadPad(GPIOD, GPIOD_FPGA_IO5);
+  return PAL_HIGH == palReadPad(GPIOF, GPIOF_FPGA_IO6);
 }
 
 bool FSMCDataFlushed(void) {
@@ -121,9 +121,14 @@ bool FSMCDataFlushed(void) {
 
 void FPGAMemAutoFill(bool enable) {
   if (enable)
-    palSetPad(GPIOF, GPIOF_FPGA_IO6);
+    palSetPad(GPIOD, GPIOD_FPGA_IO5);
   else
-    palClearPad(GPIOF, GPIOF_FPGA_IO6);
+    palClearPad(GPIOD, GPIOD_FPGA_IO5);
+
+//  if (enable)
+//    palSetPad(GPIOF, GPIOF_FPGA_IO6);
+//  else
+//    palClearPad(GPIOF, GPIOF_FPGA_IO6);
 }
 
 bool FPGAMulRdy(void) {
