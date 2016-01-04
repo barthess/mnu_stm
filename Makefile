@@ -116,7 +116,6 @@ CSRC = $(STARTUPSRC) \
 # C++ sources that can be compiled in ARM or THUMB mode depending on the global
 # setting.
 CPPSRC = $(CHCPPSRC) \
-		main_memtest.cpp \
 		$(CHIBIOS_CONTRIB)/os/various/memtest.cpp \
 		src/i2c_local.cpp \
 		src/i2c_sensor.cpp \
@@ -125,7 +124,8 @@ CPPSRC = $(CHCPPSRC) \
 		cli/cli.cpp \
 		cli/cli_cmd.cpp \
 		src/fpga/test/fpga_led_test.cpp \
-		src/fpga/test/fpga_mem_test.cpp
+		src/fpga/test/fpga_mem_test.cpp \
+		main_memtest.cpp
 
 # C sources to be compiled in ARM mode regardless of the global setting.
 # NOTE: Mixing ARM and THUMB mode enables the -mthumb-interwork compiler
