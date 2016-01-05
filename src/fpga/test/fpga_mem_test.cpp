@@ -164,7 +164,7 @@ void fpga_memtest(FPGADriver *fpgap, size_t turns) {
 
   osalDbgCheck(fpgap->state == FPGA_READY);
 
-  memtest_struct.start = fpgap->memspace;
+  memtest_struct.start = fpgaGetCmdSlice(fpgap, FPGA_WB_SLICE_MEMTEST);
   time_measurement_t memtest_tm;
   chTMObjectInit(&memtest_tm);
 

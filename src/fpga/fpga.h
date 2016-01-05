@@ -11,13 +11,16 @@ typedef uint16_t        fpgaword_t;         /* fpga talks with stm32 using 16-bi
 /* current FPGA firmware limitations */
 #define FPGA_MTRX_MAX_ROW   32
 #define FPGA_MTRX_MAX_COL   32
-#define FPGA_MTRX_CNT       4
 
 /* IDs of command slices for differ peripherals */
 #define FPGA_WB_SLICE_MEMTEST     0
 #define FPGA_WB_SLICE_LED         1
-#define FPGA_WB_SLICE_RESERVED    2
-#define FPGA_WB_SLICE_MUL         3 /* all recent slices is for 4 matrix data storage */
+#define FPGA_WB_SLICE_MUL_OP1     2
+#define FPGA_WB_SLICE_MUL_OP2     3
+#define FPGA_WB_SLICE_MUL_RES     4
+#define FPGA_WB_SLICE_MUL_CTRL    5
+#define FPGA_WB_SLICE_RESERVED1   6
+#define FPGA_WB_SLICE_RESERVED2   7
 
 /**
  * @brief   Driver state machine possible states.

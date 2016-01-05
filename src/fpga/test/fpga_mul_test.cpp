@@ -3,10 +3,7 @@
 #include "main.h"
 #include "pads.h"
 
-#include "fpga_mul.h"
 #include "fpga_mul_test.hpp"
-
-using namespace chibios_rt;
 
 /*
  ******************************************************************************
@@ -31,13 +28,6 @@ using namespace chibios_rt;
  * GLOBAL VARIABLES
  ******************************************************************************
  */
-
-double op0 = 3.71;
-double op1 = 1.3;
-volatile double result;
-const double step = 0.13;
-size_t wait_cycles = 0;
-double delta;
 
 /*
  ******************************************************************************

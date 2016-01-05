@@ -18,8 +18,7 @@
 #include "pads.h"
 
 #include "fpga.h"
-#include "fpga_mem_test.hpp"
-#include "fpga_led_test.hpp"
+#include "test/fpga_led_test.hpp"
 
 /*
  ******************************************************************************
@@ -74,25 +73,10 @@ int main(void) {
   halInit();
   chSysInit();
 
-  // Enable special "compensation cell" for IO working on 100MHz.
-  // Looks like FSMC works slower when it enabled
-//  rccEnableAPB2(RCC_APB2ENR_SYSCFGEN, false);
-//  SYSCFG->CMPCR |= SYSCFG_CMPCR_CMP_PD;
-//  while (! SYSCFG->CMPCR & SYSCFG_CMPCR_READY)
-//    ;
-
-  osalThreadSleepMilliseconds(100);
-
   fpgaObjectInit(&FPGAD1);
   fpgaStart(&FPGAD1);
 
-  //fpga_led_test(&FPGAD1, -1);
-  fpga_memtest(&FPGAD1, -1);
-
-  while (true) {
-    osalThreadSleepMilliseconds(100);
-    orange_led_toggle();
-  }
+  fpga_led_test(&FPGAD1, -1);
 }
 
 
