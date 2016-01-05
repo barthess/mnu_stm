@@ -108,7 +108,7 @@ void boardInit(void) {
 }
 
 bool FPGAReady(void) {
-  return PAL_LOW == palReadPad(GPIOC, GPIOC_FPGA_IO3);
+  return PAL_HIGH == palReadPad(GPIOC, GPIOC_FPGA_IO3);
 }
 
 bool FPGAbramDbgOk(void) {
@@ -124,11 +124,6 @@ void FPGAMemAutoFill(bool enable) {
     palSetPad(GPIOD, GPIOD_FPGA_IO5);
   else
     palClearPad(GPIOD, GPIOD_FPGA_IO5);
-
-//  if (enable)
-//    palSetPad(GPIOF, GPIOF_FPGA_IO6);
-//  else
-//    palClearPad(GPIOF, GPIOF_FPGA_IO6);
 }
 
 bool FPGAMulRdy(void) {
