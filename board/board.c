@@ -116,7 +116,7 @@ bool FPGAbramDbgOk(void) {
 }
 
 bool FSMCDataFlushed(void) {
-  return PAL_LOW == palReadPad(GPIOD, GPIOD_MEM_NE1);
+  return PAL_HIGH == palReadPad(GPIOD, GPIOD_MEM_NE1);
 }
 
 void FPGAMemAutoFill(bool enable) {
