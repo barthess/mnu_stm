@@ -1,25 +1,8 @@
-/*
-    ChibiOS/RT - Copyright (C) 2013-2014 Uladzimir Pylinsky aka barthess
-
-    Licensed under the Apache License, Version 2.0 (the "License");
-    you may not use this file except in compliance with the License.
-    You may obtain a copy of the License at
-
-        http://www.apache.org/licenses/LICENSE-2.0
-
-    Unless required by applicable law or agreed to in writing, software
-    distributed under the License is distributed on an "AS IS" BASIS,
-    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    See the License for the specific language governing permissions and
-    limitations under the License.
-*/
-
 #include "main.h"
 #include "pads.h"
 
 #include "fpga.h"
-#include "test/fpga_led_test.hpp"
-#include "test/fpga_stub_test.hpp"
+#include "fpga_stub_test.hpp"
 
 /*
  ******************************************************************************
@@ -59,25 +42,20 @@
  ******************************************************************************
  */
 
-/*
- * Application entry point.
+/**
+ *
  */
-int main(void) {
+void fpga_stub_test(FPGADriver *fpgap, size_t turns) {
+  osalDbgCheck(fpgap->state == FPGA_READY);
 
- /*
-  * System initializations.
-  * - HAL initialization, this also initializes the configured device drivers
-  *   and performs the board-specific initializations.
-  * - Kernel initialization, the main() function becomes a thread and the
-  *   RTOS is active.
-  */
-  halInit();
-  chSysInit();
+  volatile fpgaword_t *ptr = fpgaGetCmdSlice(fpgap, FPGA_WB_SLICE_RESERVED1);
+  volatile fpgaword_t pattern;
 
-  fpgaObjectInit(&FPGAD1);
-  fpgaStart(&FPGAD1);
+  while (turns--) {
+    osalThreadSleepMilliseconds(50);
+    pattern = ptr[0];
+    green_led_toggle();
+  }
 
-  fpga_led_test(&FPGAD1, -1);
+  (void)pattern;
 }
-
-

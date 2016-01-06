@@ -18,7 +18,7 @@
 #include "pads.h"
 
 #include "fpga.h"
-#include "test/fpga_led_test.hpp"
+#include "test/fpga_mul_test.hpp"
 
 /*
  ******************************************************************************
@@ -76,7 +76,7 @@ int main(void) {
   fpgaObjectInit(&FPGAD1);
   fpgaStart(&FPGAD1);
 
-  fpga_led_test(&FPGAD1, -1);
+  fpga_mul_test(&FPGAD1, -1);
 }
 
 

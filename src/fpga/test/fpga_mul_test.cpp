@@ -46,36 +46,39 @@
 /**
  *
  */
-void fpga_mul_test(MtrxMul *mulp) {
-  double *ptr0 = mulMtrxSlice(mulp, 0);
-  double *ptr1 = mulMtrxSlice(mulp, 1);
-  double *ptr2 = mulMtrxSlice(mulp, 2);
+volatile fpgaword_t tmp;
+void fpga_mul_test(FPGADriver *fpgap, size_t turns) {
 
-  ptr0[1023] = op0;
-  ptr1[1023] = op1;
+  osalDbgCheck(fpgap->state == FPGA_READY);
 
-  result = op0 * op1;
+  double *op1 = (double *)fpgaGetCmdSlice(fpgap, FPGA_WB_SLICE_MUL_OP1);
+  double *op2 = (double *)fpgaGetCmdSlice(fpgap, FPGA_WB_SLICE_MUL_OP2);
+  double *res = (double *)fpgaGetCmdSlice(fpgap, FPGA_WB_SLICE_MUL_RES);
+  fpgaword_t *ctl = fpgaGetCmdSlice(fpgap, FPGA_WB_SLICE_MUL_CTL);
 
-  mulMtrxMultiply(mulp, 0, 1, 2, 1, 1);
+  while (turns--) {
 
-  // collect result
-  result = ptr2[1023];
+    for(size_t i=0; i<32*32; i++) {
+      op1[i] = i;
+      op2[i] = i+1;
+      res[i] = i+2;
+    }
 
-  delta = fabs(result - (op0*op1));
-  if (delta > (double)0.0001) {
-    red_led_on();
-    green_led_off();
+    ctl[0] = 8100;
+//    while(FPGAMulRdy())
+//      ;
+
+    while (! FSMCDataFlushed())
+      ;
+    tmp = ctl[0];
+
+    while(! FPGAMulRdy())
+      green_led_toggle();
+
+    tmp = res[0];
   }
-  else {
-    green_led_on();
-    red_led_off();
-  }
 
-//  wait_cycles = 0;
-//  op1 += step;
-//  op2 += step + (double)0.0171;
-//  if (op1 > 100)
-//    op1 = -100;
-//  if (op2 > 100)
-//    op2 = -100;
+  green_led_off();
+  red_led_off();
+  orange_led_off();
 }

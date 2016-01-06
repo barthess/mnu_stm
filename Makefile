@@ -5,7 +5,7 @@
 
 # Compiler options here.
 ifeq ($(USE_OPT),)
-  USE_OPT = -O0 -ggdb -fomit-frame-pointer -falign-functions=16
+  USE_OPT = -O3 -ggdb -fomit-frame-pointer -falign-functions=16
 endif
 
 # C specific options here (added to USE_OPT).
@@ -125,6 +125,8 @@ CPPSRC = $(CHCPPSRC) \
 		cli/cli_cmd.cpp \
 		src/fpga/test/fpga_led_test.cpp \
 		src/fpga/test/fpga_mem_test.cpp \
+		src/fpga/test/fpga_mul_test.cpp \
+		src/fpga/test/fpga_stub_test.cpp \
 		main_mem_test.cpp
 
 # C sources to be compiled in ARM mode regardless of the global setting.

@@ -18,7 +18,7 @@ typedef uint16_t        fpgaword_t;         /* fpga talks with stm32 using 16-bi
 #define FPGA_WB_SLICE_MUL_OP1     2
 #define FPGA_WB_SLICE_MUL_OP2     3
 #define FPGA_WB_SLICE_MUL_RES     4
-#define FPGA_WB_SLICE_MUL_CTRL    5
+#define FPGA_WB_SLICE_MUL_CTL     5
 #define FPGA_WB_SLICE_RESERVED1   6
 #define FPGA_WB_SLICE_RESERVED2   7
 
