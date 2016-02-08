@@ -65,7 +65,7 @@ endif
 
 # Enables the use of FPU on Cortex-M4 (no, softfp, hard).
 ifeq ($(USE_FPU),)
-  USE_FPU = softfp
+  USE_FPU = no
 endif
 
 #
@@ -111,7 +111,8 @@ CSRC = $(STARTUPSRC) \
        $(CHIBIOS)/os/hal/lib/streams/memstreams.c \
        board/board.c \
        src/microrl.c \
-       src/fpga/fpga.c
+       src/fpga/fpga.c \
+       src/fpga/fpga_pwm.c
 	
 # C++ sources that can be compiled in ARM or THUMB mode depending on the global
 # setting.
@@ -204,7 +205,7 @@ AOPT =
 TOPT = -mthumb -DTHUMB
 
 # Common warning flags
-WARN = -Wall -Wextra -Wdouble-promotion -Wformat -Wundef #-Wconversion -Werror
+WARN = -Wall -Wextra -Wformat # -Wdouble-promotion # -Wundef #-Wconversion -Werror
 
 # Define C warning options here
 CWARN = $(WARN) -Wstrict-prototypes

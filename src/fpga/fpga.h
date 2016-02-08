@@ -5,22 +5,32 @@
 
 typedef uint16_t        fpgaword_t;         /* fpga talks with stm32 using 16-bit words */
 
-#define FPGA_WB_SLICE_SIZE   65536    /* address space size single wishbone slice in fpga_words */
-#define FPGA_WB_SLICE_CNT    8        /* total number of slices */
+#define FPGA_WB_SLICE_SIZE    65536     /* address space size single wishbone slice in fpga_words */
+#define FPGA_WB_SLICE_CNT     16        /* total number of slices */
 
 /* current FPGA firmware limitations */
-#define FPGA_MTRX_MAX_ROW   32
-#define FPGA_MTRX_MAX_COL   32
+#define FPGA_MTRX_MAX_ROW     32
+#define FPGA_MTRX_MAX_COL     32
 
 /* IDs of command slices for differ peripherals */
 #define FPGA_WB_SLICE_MEMTEST     0
 #define FPGA_WB_SLICE_LED         1
-#define FPGA_WB_SLICE_MUL_OP1     2
-#define FPGA_WB_SLICE_MUL_OP2     3
-#define FPGA_WB_SLICE_MUL_RES     4
-#define FPGA_WB_SLICE_MUL_CTL     5
-#define FPGA_WB_SLICE_RESERVED1   6
-#define FPGA_WB_SLICE_RESERVED2   7
+
+#define FPGA_WB_SLICE_MUL_BUF0    2
+#define FPGA_WB_SLICE_MUL_BUF1    3
+#define FPGA_WB_SLICE_MUL_BUF2    4
+#define FPGA_WB_SLICE_MUL_BUF3    5
+#define FPGA_WB_SLICE_MUL_BUF4    6
+#define FPGA_WB_SLICE_MUL_BUF5    7
+#define FPGA_WB_SLICE_MUL_BUF6    8
+#define FPGA_WB_SLICE_MUL_BUF7    9
+#define FPGA_WB_SLICE_MUL_CTL     10
+
+#define FPGA_WB_SLICE_PWM_ICU     11
+#define FPGA_WB_SLICE_RESERVED1   12
+#define FPGA_WB_SLICE_RESERVED2   13
+#define FPGA_WB_SLICE_RESERVED3   14
+#define FPGA_WB_SLICE_RESERVED4   15
 
 /**
  * @brief   Driver state machine possible states.

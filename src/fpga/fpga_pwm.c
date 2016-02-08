@@ -55,7 +55,7 @@ void fpgapwmStart(FpgaPwm *pwmp, const FPGADriver *fpgap) {
 
   osalDbgCheck(fpgap->state == FPGA_READY);
 
-  pwmp->pwm = fpgaGetCmdSlice(fpgap, FPGA_CMD_SLICE_PWM);
+  pwmp->pwm = fpgaGetCmdSlice(fpgap, FPGA_WB_SLICE_PWM_ICU);
   pwmp->state = FPGAPWM_READY;
 }
 
@@ -70,7 +70,7 @@ void fpgapwmStop(FpgaPwm *pwmp) {
 /**
  *
  */
-void fpgapwmSet(FpgaPwm *pwmp, fpgacmd_t val, size_t N) {
+void fpgapwmSet(FpgaPwm *pwmp, fpgaword_t val, size_t N) {
   osalDbgCheck(FPGAPWM_READY == pwmp->state);
   //osalDbgCheck(N < FPGA_PWM_CHANNELS);
 

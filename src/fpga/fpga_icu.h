@@ -23,7 +23,7 @@ typedef struct FpgaIcu FpgaIcu;
  * @brief   Structure.
  */
 struct FpgaIcu {
-  fpgacmd_t       *icu;
+  fpgaword_t      *icu;
   fpgaicustate_t  state;
 };
 
@@ -41,7 +41,7 @@ extern "C" {
   void fpgaicuObjectInit(FpgaIcu *icup);
   void fpgaicuStart(FpgaIcu *icup, const FPGADriver *fpgap);
   void fpgaicuStop(FpgaIcu *icup);
-  fpgacmd_t fpgaicuRead(const FpgaIcu *icup, size_t N);
+  fpgaword_t fpgaicuRead(const FpgaIcu *icup, size_t N);
 #ifdef __cplusplus
 }
 #endif

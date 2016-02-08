@@ -44,13 +44,13 @@ static const SRAMConfig sram_cfg = {
     (FSMC_BCR_MWID_16 | FSMC_BCR_MTYP_SRAM | FSMC_BCR_WREN | FSMC_BCR_EXTMOD),
 
     // BTR
-    (0 << 16) | // BUSTURN (min = 0)
-    (7 << 8)  | // DATAST (min = 1)
+    (1 << 16) | // BUSTURN (min = 0) (do not set it to zero for proper FPGA handling)
+    (10 << 8)  | // DATAST (min = 1)
     (0 << 0),   // ADDSET (min = 0)
 
     // BWTR
-    (0 << 16) | // BUSTURN
-    (2 << 8)  | // DATAST
+    (1 << 16) | // BUSTURN (do not set it to zero for proper FPGA handling)
+    (3 << 8)  | // DATAST  (for 108MHz FPGA it must be at least 3)
     (0 << 0),   // ADDSET
 };
 

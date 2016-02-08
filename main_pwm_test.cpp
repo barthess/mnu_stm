@@ -89,23 +89,20 @@ int main(void) {
   fpgapwmObjectInit(&FPGAPWMD1);
   fpgapwmStart(&FPGAPWMD1, &FPGAD1);
 
-  fpgaicuObjectInit(&FPGAICUD1);
-  fpgaicuStart(&FPGAICUD1, &FPGAD1);
-
-  fpgacmd_t pwm_val = 0;
-  fpgacmd_t icu_val[5];
+  fpgaword_t pwm_val = 0;
+  fpgaword_t icu_val[5];
 
   while (true) {
     //fpgapwmSet(&FPGAPWMD1, pwm_val, 1);
-    for (size_t i=0; i<16; i++) {
-      fpgapwmSet(&FPGAPWMD1, 1000*i + 1, i);
+//    for (size_t i=0; i<16; i++) {
+//      fpgapwmSet(&FPGAPWMD1, 1000*i + 1, i);
 //      fpgapwmSet(&FPGAPWMD1, pwm_val, i);
       //icu_val = fpgaicuRead(&FPGAICUD1, 0);
-    }
-    osalThreadSleepMilliseconds(1);
-    pwm_val++;
-    if (pwm_val > 2000)
-      pwm_val = 0;
+//    }
+//    osalThreadSleepMilliseconds(1);
+//    pwm_val++;
+//    if (pwm_val > 2000)
+//      pwm_val = 0;
 
 //    fpgapwmSet(&FPGAPWMD1, 1500, 0);
 //    osalThreadSleepMilliseconds(500);
@@ -114,10 +111,11 @@ int main(void) {
 //    fpgapwmSet(&FPGAPWMD1, 1400, 0);
 //    osalThreadSleepMilliseconds(500);
 
-    icu_val[0] = FPGAPWMD1.pwm[256];
-    icu_val[1] = FPGAPWMD1.pwm[257];
-    icu_val[2] = FPGAPWMD1.pwm[258];
-    icu_val[3] = FPGAPWMD1.pwm[259];
+    icu_val[0] = FPGAPWMD1.pwm[0];
+    icu_val[1] = FPGAPWMD1.pwm[1];
+    icu_val[2] = FPGAPWMD1.pwm[2];
+    icu_val[3] = FPGAPWMD1.pwm[3];
+    icu_val[4] = FPGAPWMD1.pwm[4];
 
     green_led_toggle();
   }
