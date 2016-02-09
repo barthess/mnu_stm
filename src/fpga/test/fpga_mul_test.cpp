@@ -1,3 +1,7 @@
+#pragma GCC optimize "-ffast-math"
+#pragma GCC optimize "-funroll-loops"
+
+
 #include <cmath>
 
 #include "main.h"
@@ -32,9 +36,9 @@ static const size_t CTL_SIZES = 1;
  ******************************************************************************
  */
 
-static double mtrx_A[10*10];
-static double mtrx_B[10*10];
-static double mtrx_C[10*10];
+static double mtrx_A[32*32];
+static double mtrx_B[32*32];
+static double mtrx_C[32*32];
 
 static time_measurement_t tmu_soft;
 static time_measurement_t tmu_hard;
@@ -66,6 +70,78 @@ void matrix_multiply(size_t m, size_t p, size_t n,
     }
   }
 }
+
+
+template <typename T>
+static bool fpga_mtrx_compare(const T *C, const T *ref, size_t len) {
+  T tmp1, tmp2;
+
+  for(size_t i=0; i<len; i++) {
+    tmp1 = C[i];
+    tmp2 = ref[i];
+    if (fabsf(tmp1 - tmp2) > 0.1) {
+      return false;
+    }
+  }
+  return true;
+}
+
+
+
+
+/**
+ *
+ */
+static void fpga_mtrx_wait_polling(void) {
+  while (! FSMCDataFlushed())
+    ;
+
+  while(! FPGAMulRdy())
+    green_led_toggle();
+}
+
+/**
+ *
+ */
+static void fpga_mtrx_dot(size_t m, size_t p, size_t n,
+                          size_t A, size_t B, size_t C,
+                          fpgaword_t *ctl) {
+  fpgaword_t tmp;
+
+  // check matrix slices numbers
+  osalDbgCheck((A != B) & (B != C) & (C != A));
+  osalDbgCheck((A < FPGA_MTRX_BRAMS_CNT) &
+               (B < FPGA_MTRX_BRAMS_CNT) &
+               (C < FPGA_MTRX_BRAMS_CNT));
+
+  // check and prepare matrix sizes
+  osalDbgCheck((m > 0) & (p > 0) & (n > 0));
+  m -= 1;
+  p -= 1;
+  n -= 1;
+  osalDbgCheck((m <= FPGA_MTRX_MAX_INDEX) &
+               (p <= FPGA_MTRX_MAX_INDEX) &
+               (n <= FPGA_MTRX_MAX_INDEX));
+
+  // write sizes
+  tmp   = m << FPGA_MTRX_INDEX_WIDTH * 0;
+  tmp  |= p << FPGA_MTRX_INDEX_WIDTH * 1;
+  tmp  |= n << FPGA_MTRX_INDEX_WIDTH * 2;
+  ctl[CTL_SIZES] = tmp;
+
+  // write control register
+  tmp  = A << FPGA_MTRX_BRAMS_CNT_BITS * 0;
+  tmp |= B << FPGA_MTRX_BRAMS_CNT_BITS * 1;
+  tmp |= C << FPGA_MTRX_BRAMS_CNT_BITS * 2;
+  tmp |= MATH_OP_DOT << FPGA_MTRX_BRAMS_CNT_BITS * 3;
+  tmp |= 1 << FPGA_MTRX_DV_BIT;
+  ctl[CTL_OP] = tmp;
+
+  // wait
+  fpga_mtrx_wait_polling();
+}
+
+
 
 
 /*
@@ -100,19 +176,20 @@ void fpga_mul_test(FPGADriver *fpgap, size_t turns) {
 
   while (turns--) {
 
-    for(size_t i=0; i<100; i++) {
-      mtrx_A[i] = i+0.1;
-      mtrx_B[i] = i+1.1;
+    for(size_t i=0; i<32*32; i++) {
+      mtrx_A[i] = i*0.01;
+      mtrx_B[i] = i*0.01 + 1.1;
     }
 
     chTMStartMeasurementX(&tmu_soft);
     //distance = boost_test();
-    matrix_multiply(10, 10, 10, mtrx_A, mtrx_B, mtrx_C);
+    matrix_multiply(32, 32, 32, mtrx_A, mtrx_B, mtrx_C);
+    //matrix_multiply_fast(32, 32, 32, mtrx_A, mtrx_B, mtrx_C);
     chTMStopMeasurementX(&tmu_soft);
 
     for(size_t i=0; i<32*32; i++) {
-      op0[i] = 0;
-      op1[i] = i+3;
+      op0[i] = i*0.01;
+      op1[i] = i*0.01 + 1.1;
       res[i] = i+10.1;
       dbg0[i] = 666;
       dbg1[i] = 666;
@@ -120,24 +197,16 @@ void fpga_mul_test(FPGADriver *fpgap, size_t turns) {
       dbg3[i] = 666;
       dbg4[i] = 666;
     }
-    op0[0] = 1;
-    op0[3] = 1;
-    uint8_t m = 1;
-    uint8_t p = 1;
-    uint8_t n = 1;
-    ctl[CTL_SIZES] = (n << 10) | (p << 5) | (m << 0);
-    //ctl[CTL_SIZES] = 0;
-    ctl[CTL_OP]    = (1 << 15) | (8 << 9) | (2 << 6) | (1 << 3) | (0 << 0);
+
+    size_t m = 32;
+    size_t p = 32;
+    size_t n = 32;
 
     chTMStartMeasurementX(&tmu_hard);
-    while (! FSMCDataFlushed())
-      ;
-
-    while(! FPGAMulRdy())
-      green_led_toggle();
+    fpga_mtrx_dot(m, p, n, 0, 1, 2, ctl);
     chTMStopMeasurementX(&tmu_hard);
 
-    tmp = res[2];
+    osalDbgCheck(true == fpga_mtrx_compare(mtrx_C, res, 32*32));
   }
 
   green_led_off();
