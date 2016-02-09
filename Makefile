@@ -5,7 +5,7 @@
 
 # Compiler options here.
 ifeq ($(USE_OPT),)
-  USE_OPT = -O3 -ggdb -fomit-frame-pointer -falign-functions=16
+  USE_OPT = -O0 -ggdb -fomit-frame-pointer -falign-functions=16
 endif
 
 # C specific options here (added to USE_OPT).
@@ -128,7 +128,7 @@ CPPSRC = $(CHCPPSRC) \
 		src/fpga/test/fpga_mem_test.cpp \
 		src/fpga/test/fpga_mul_test.cpp \
 		src/fpga/test/fpga_stub_test.cpp \
-		main_mem_test.cpp
+		main_wb_mul_test.cpp
 
 # C sources to be compiled in ARM mode regardless of the global setting.
 # NOTE: Mixing ARM and THUMB mode enables the -mthumb-interwork compiler
@@ -242,4 +242,9 @@ ULIBS = -lm
 
 RULESPATH = $(CHIBIOS)/os/common/ports/ARMCMx/compilers/GCC
 include $(RULESPATH)/rules.mk
+
+src/fpga/fpga.h : src/fpga/fpga_constants.h
+
+src/fpga/fpga_constants.h: ../xilinx/fsmc2wb/rtl/mtrx_math_constants.vhd
+	bash extract_fpga_constants.sh
 

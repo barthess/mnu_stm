@@ -14,7 +14,6 @@
 static const size_t CTL_OP = 0;
 static const size_t CTL_SIZES = 1;
 
-
 /*
  ******************************************************************************
  * EXTERNS
@@ -68,6 +67,7 @@ void matrix_multiply(size_t m, size_t p, size_t n,
   }
 }
 
+
 /*
  ******************************************************************************
  * EXPORTED FUNCTIONS
@@ -111,8 +111,8 @@ void fpga_mul_test(FPGADriver *fpgap, size_t turns) {
     chTMStopMeasurementX(&tmu_soft);
 
     for(size_t i=0; i<32*32; i++) {
-      op0[i] = i;
-      op1[i] = 1;
+      op0[i] = 0;
+      op1[i] = i+3;
       res[i] = i+10.1;
       dbg0[i] = 666;
       dbg1[i] = 666;
@@ -120,13 +120,14 @@ void fpga_mul_test(FPGADriver *fpgap, size_t turns) {
       dbg3[i] = 666;
       dbg4[i] = 666;
     }
-
-    uint8_t m = 2;
-    uint8_t p = 2;
-    uint8_t n = 2;
-    //ctl[CTL_SIZES] = (n << 10) | (p << 5) | (m << 0);
-    ctl[CTL_SIZES] = 0;
-    ctl[CTL_OP]    = (1 << 15) | (0 << 9) | (3 << 6) | (1 << 3) | (0 << 0);
+    op0[0] = 1;
+    op0[3] = 1;
+    uint8_t m = 1;
+    uint8_t p = 1;
+    uint8_t n = 1;
+    ctl[CTL_SIZES] = (n << 10) | (p << 5) | (m << 0);
+    //ctl[CTL_SIZES] = 0;
+    ctl[CTL_OP]    = (1 << 15) | (8 << 9) | (2 << 6) | (1 << 3) | (0 << 0);
 
     chTMStartMeasurementX(&tmu_hard);
     while (! FSMCDataFlushed())

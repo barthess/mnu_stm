@@ -3,6 +3,8 @@
 
 #include "fsmc_sram.h"
 
+#include "fpga_constants.h"
+
 typedef uint16_t        fpgaword_t;         /* fpga talks with stm32 using 16-bit words */
 
 #define FPGA_WB_SLICE_SIZE    65536     /* address space size single wishbone slice in fpga_words */
