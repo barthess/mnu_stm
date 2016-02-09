@@ -10,6 +10,4 @@
 
 #include "hal.h"
 
-#define THREAD_HEAP_SIZE      (5 * 1024)
-
 #endif /* MAIN_H_ */
