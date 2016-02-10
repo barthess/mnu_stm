@@ -10,4 +10,6 @@
 
 #include "hal.h"
 
+#define __CCM__ __attribute__((section(".ram4")))
+
 #endif /* MAIN_H_ */
