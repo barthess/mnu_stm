@@ -6,6 +6,7 @@
 #include "pads.h"
 
 #include "fpga_mul_test.hpp"
+#include "fpga_mem_test.hpp"
 
 #include "matrix_primitives.hpp"
 
@@ -177,7 +178,7 @@ static void mtrx_compare_exact(const T *soft_dat, const T *fpga_dat, size_t m, s
     tmp2 = fpga_dat[i];
     if (fabsf(tmp1 - tmp2) > 0) {
       red_led_on();
-      osalSysHalt("");
+      //osalSysHalt("");
     }
   }
 }
@@ -311,6 +312,7 @@ void fpga_mtrx_dot(size_t m, size_t p, size_t n,
                    fpgaword_t *ctl) {
 
   ctl[CTL_SIZES] = fill_sizes(m, p, n);
+  osalThreadSleepMilliseconds(1);
   ctl[CTL_OP]    = fill_blk_adr3(A, B, C, MATH_OP_DOT);
 
   fpga_mtrx_wait_polling();
@@ -589,10 +591,23 @@ void fpga_dot_test(size_t m, size_t p, size_t n,
                    size_t A, size_t B, size_t C,
                    fpgaword_t *ctl) {
 
-  manual_fill_rand(mtrx_pool[A], m, n);
-  manual_fill_rand(mtrx_pool[B], m, n);
+//  manual_fill_rand(mtrx_pool[A], m, n);
+//  manual_fill_rand(mtrx_pool[B], m, n);
+//  manual_fill_copy(fpga_pool[A], mtrx_pool[A], m, n);
+//  manual_fill_copy(fpga_pool[B], mtrx_pool[B], m, n);
+
+  manual_fill_pattern(mtrx_pool[A], 1, true, m, n);
+  manual_fill_pattern(mtrx_pool[B], 8, true, m, n);
   manual_fill_copy(fpga_pool[A], mtrx_pool[A], m, n);
   manual_fill_copy(fpga_pool[B], mtrx_pool[B], m, n);
+
+  manual_fill_pattern(mtrx_pool[C], 3, false, 31, 31);
+  manual_fill_copy(fpga_pool[C], mtrx_pool[C], 31, 31);
+  manual_fill_copy(fpga_pool[3], mtrx_pool[C], 31, 31);
+  manual_fill_copy(fpga_pool[4], mtrx_pool[C], 31, 31);
+  manual_fill_copy(fpga_pool[5], mtrx_pool[C], 31, 31);
+  manual_fill_copy(fpga_pool[6], mtrx_pool[C], 31, 31);
+  manual_fill_copy(fpga_pool[7], mtrx_pool[C], 31, 31);
 
   soft_mtrx_dot(m, p, n, A, B, C);
 
@@ -947,31 +962,30 @@ void rand_generate_ABC(fpgaword_t *A, fpgaword_t *B, fpgaword_t *C) {
  */
 void test_fpga_rand(fpgaword_t *ctl, size_t turns) {
   fpgaword_t m, p, n, A, B, C;
-  uint32_t op;
 
   while(turns--) {
     rand_generate_mpn(&m, &p, &n);
     rand_generate_ABC(&A, &B, &C);
-//    fpga_dot_test(1, 2, 1, 6, 5, 4, ctl);
+    fpga_dot_test(1, 2, 1, 0, 1, 2, ctl);
 
-    op = rand();
-    switch (op & 3){
-    case 0:
-      fpga_dot_test(m, p, n, A, B, C, ctl);
-      break;
-    case 1:
-      fpga_add_test(m,    n, A, B, C, ctl);
-      break;
-    case 2:
-      fpga_mul_test(m,    n, A, B, C, ctl);
-      break;
-    case 3:
-      fpga_mov_test(m,    n, A,    C, ctl);
-      break;
-    default:
-      osalSysHalt("");
-      break;
-    }
+//    uint32_t op = rand();
+//    switch (op & 3){
+//    case 0:
+//      fpga_dot_test(m, p, n, A, B, C, ctl);
+//      break;
+//    case 1:
+//      fpga_add_test(m,    n, A, B, C, ctl);
+//      break;
+//    case 2:
+//      fpga_mul_test(m,    n, A, B, C, ctl);
+//      break;
+//    case 3:
+//      fpga_mov_test(m,    n, A,    C, ctl);
+//      break;
+//    default:
+//      osalSysHalt("");
+//      break;
+//    }
   }
 }
 
@@ -1213,12 +1227,21 @@ void test_fpga_memory_isolation(void) {
 volatile fpgaword_t tmp;
 volatile double distance;
 void fpga_mul_test(FPGADriver *fpgap, size_t turns) {
-
-  osalDbgCheck(fpgap->state == FPGA_READY);
-
   chTMObjectInit(&tmu_soft);
   chTMObjectInit(&tmu_hard);
 
+  osalDbgCheck(fpgap->state == FPGA_READY);
+
+  // memtest on brams
+  for (size_t i=0; i<8; i++) {
+    size_t depth = (1 << FPGA_MTRX_INDEX_WIDTH) * (1 << FPGA_MTRX_INDEX_WIDTH);
+    depth *= sizeof(double);
+    depth /= sizeof(fpgaword_t);
+
+    fpga_memtest(&FPGAD1, false, 2, FPGA_WB_SLICE_MUL_BUF0 + i, depth);
+  }
+
+  // now math test
   for (size_t i=0; i<8; i++) {
     fpga_pool[i] = (double *)fpgaGetCmdSlice(fpgap, FPGA_WB_SLICE_MUL_BUF0 + i);
   }
@@ -1231,8 +1254,8 @@ void fpga_mul_test(FPGADriver *fpgap, size_t turns) {
     srand(chSysGetRealtimeCounterX());
     init_rand_pool();
 
-    test_fpga_corner(ctl);
     test_fpga_rand(ctl, 200);
+    test_fpga_corner(ctl);
     test_fpga_memory_isolation();
     test_fpga_memory_isolation_math(ctl);
 
