@@ -45,12 +45,12 @@ static const SRAMConfig sram_cfg = {
 
     // BTR
     (1 << 16) | // BUSTURN (min = 0) (do not set it to zero for proper FPGA handling)
-    (10 << 8)  | // DATAST (min = 1)
+    (12 << 8)  | // DATAST (min = 1)
     (0 << 0),   // ADDSET (min = 0)
 
     // BWTR
     (1 << 16) | // BUSTURN (do not set it to zero for proper FPGA handling)
-    (3 << 8)  | // DATAST  (for 108MHz FPGA it must be at least 3)
+    (4 << 8)  | // DATAST  (for 108MHz FPGA it must be at least 3)
     (0 << 0),   // ADDSET
 };
 
