@@ -14,7 +14,7 @@ using namespace chibios_rt;
  * DEFINES
  ******************************************************************************
  */
-#define BRAM_DEPTH    (32768 * 1)
+//#define BRAM_DEPTH    (32768 * 1)
 #define BRAM_WIDTH    2 // width in bytes
 
 /*
@@ -36,11 +36,9 @@ static void mem_error_cb(memtest_t *memp, testtype type, size_t index,
  ******************************************************************************
  */
 
-static const size_t sram_size = BRAM_DEPTH * BRAM_WIDTH;
-
 static memtest_t memtest_struct = {
     nullptr,
-    sram_size,
+    0,
     MEMTEST_WIDTH_64 | MEMTEST_WIDTH_32 | MEMTEST_WIDTH_16,
     mem_error_cb
 };
@@ -120,7 +118,7 @@ void chipscope_test(memtest_t *testp, size_t turns) {
 /*
  *
  */
-static void zero_addr_match(memtest_t *testp) {
+void fpga_assisted_zero_addr_match(memtest_t *testp) {
   volatile uint16_t *mem_array = (uint16_t *)testp->start;
 
   FPGAMemAutoFill(false);
@@ -138,14 +136,14 @@ static void zero_addr_match(memtest_t *testp) {
 /*
  *
  */
-static void fpga_own_addr(memtest_t *testp) {
+void fpga_assisted_fpga_own_addr(memtest_t *testp, size_t depth) {
   volatile uint16_t *mem_array = (uint16_t *)testp->start;
   volatile uint16_t read;
 
   FPGAMemAutoFill(true);
   osalThreadSleepMilliseconds(10); // wait until FPGA fills all BRAM array
 
-  for (size_t i=0; i<BRAM_DEPTH; i++) {
+  for (size_t i=0; i<depth; i++) {
     read = mem_array[i];
     osalDbgCheck(i == read);
   }
@@ -160,18 +158,22 @@ static void fpga_own_addr(memtest_t *testp) {
 /**
  *
  */
-void fpga_memtest(FPGADriver *fpgap, size_t turns) {
+void fpga_memtest(FPGADriver *fpgap, bool fpga_assistance, size_t turns,
+                  size_t slice, size_t depth) {
 
   osalDbgCheck(fpgap->state == FPGA_READY);
 
-  memtest_struct.start = fpgaGetCmdSlice(fpgap, FPGA_WB_SLICE_MEMTEST);
+  memtest_struct.start = fpgaGetCmdSlice(fpgap, slice);
+  memtest_struct.size = depth * BRAM_WIDTH;
+
   time_measurement_t memtest_tm;
   chTMObjectInit(&memtest_tm);
 
   while (turns--) {
-    /* FPGA assisted tests */
-    zero_addr_match(&memtest_struct);
-    fpga_own_addr(&memtest_struct);
+    if (fpga_assistance) {
+      fpga_assisted_zero_addr_match(&memtest_struct);
+      fpga_assisted_fpga_own_addr(&memtest_struct, depth);
+    }
 
     /* general memtest without FPGA participating */
     running_lights(&memtest_struct, &memtest_tm);
@@ -180,8 +182,6 @@ void fpga_memtest(FPGADriver *fpgap, size_t turns) {
   green_led_off();
   red_led_off();
   orange_led_off();
-
-  chipscope_test(&memtest_struct, -1);
 }
 
 

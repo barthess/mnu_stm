@@ -25,7 +25,7 @@
  * DEFINES
  ******************************************************************************
  */
-
+#define BRAM_DEPTH
 /*
  ******************************************************************************
  * EXTERNS
@@ -85,7 +85,7 @@ int main(void) {
   fpgaObjectInit(&FPGAD1);
   fpgaStart(&FPGAD1);
 
-  fpga_memtest(&FPGAD1, -1);
+  fpga_memtest(&FPGAD1, true, -1, FPGA_WB_SLICE_MEMTEST, 32768);
 
   while (true) {
     osalThreadSleepMilliseconds(100);
