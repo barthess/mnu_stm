@@ -76,6 +76,8 @@ int main(void) {
   fpgaObjectInit(&FPGAD1);
   fpgaStart(&FPGAD1);
 
+  osalThreadSleepMilliseconds(1000);
+
   fpga_mul_test(&FPGAD1, -1);
 }
 
