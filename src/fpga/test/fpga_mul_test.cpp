@@ -167,6 +167,7 @@ static void mtrx_compare_approx(const T *soft_dat, const T *fpga_dat, size_t m, 
 /**
  *
  */
+static volatile size_t err_cnt = 0;
 template <typename T>
 static void mtrx_compare_exact(const T *soft_dat, const T *fpga_dat, size_t m, size_t n) {
   T tmp1, tmp2;
@@ -178,6 +179,7 @@ static void mtrx_compare_exact(const T *soft_dat, const T *fpga_dat, size_t m, s
     tmp2 = fpga_dat[i];
     if (fabsf(tmp1 - tmp2) > 0) {
       red_led_on();
+      err_cnt++;
       //osalSysHalt("");
     }
   }
@@ -186,14 +188,14 @@ static void mtrx_compare_exact(const T *soft_dat, const T *fpga_dat, size_t m, s
 /**
  *
  */
-static void fpga_mtrx_wait_polling(void) {
+static void wait_polling(void) {
 
   orange_led_on();
 
   while (! FSMCDataFlushed())
     ;
 
-  while(! FPGAMulRdy())
+  while(! FPGAMathRdy())
     ;
 
   orange_led_off();
@@ -315,7 +317,7 @@ void fpga_mtrx_dot(size_t m, size_t p, size_t n,
   osalThreadSleepMilliseconds(1);
   ctl[CTL_OP]    = fill_blk_adr3(A, B, C, MATH_OP_DOT);
 
-  fpga_mtrx_wait_polling();
+  wait_polling();
 }
 
 /**
@@ -328,7 +330,7 @@ void fpga_mtrx_add(size_t m,           size_t n,
   ctl[CTL_SIZES] = fill_sizes(m, n);
   ctl[CTL_OP]    = fill_blk_adr3(A, B, C, MATH_OP_ADD);
 
-  fpga_mtrx_wait_polling();
+  wait_polling();
 }
 
 /**
@@ -341,7 +343,7 @@ void fpga_mtrx_sub(size_t m,           size_t n,
   ctl[CTL_SIZES] = fill_sizes(m, n);
   ctl[CTL_OP]    = fill_blk_adr3(A, B, C, MATH_OP_SUB);
 
-  fpga_mtrx_wait_polling();
+  wait_polling();
 }
 
 /**
@@ -354,7 +356,7 @@ void fpga_mtrx_mul(size_t m,           size_t n,
   ctl[CTL_SIZES] = fill_sizes(m, n);
   ctl[CTL_OP]    = fill_blk_adr3(A, B, C, MATH_OP_MUL);
 
-  fpga_mtrx_wait_polling();
+  wait_polling();
 }
 
 /**
@@ -369,7 +371,7 @@ void fpga_mtrx_scale(size_t m,           size_t n,
   ctl[CTL_SIZES] = fill_sizes(m, n);
   ctl[CTL_OP]    = fill_blk_adr2(A, C, MATH_OP_SCALE);
 
-  fpga_mtrx_wait_polling();
+  wait_polling();
 }
 
 /**
@@ -382,7 +384,7 @@ void fpga_mtrx_cpy(size_t m,           size_t n,
   ctl[CTL_SIZES] = fill_sizes(m, n);
   ctl[CTL_OP]    = fill_blk_adr2(A, C, MATH_OP_CPY);
 
-  fpga_mtrx_wait_polling();
+  wait_polling();
 }
 
 /**
@@ -395,7 +397,7 @@ void fpga_mtrx_trn(size_t m,           size_t n,
   ctl[CTL_SIZES] = fill_sizes(m, n);
   ctl[CTL_OP]    = fill_blk_adr2(A, C, MATH_OP_TRN);
 
-  fpga_mtrx_wait_polling();
+  wait_polling();
 }
 
 /**
@@ -410,7 +412,7 @@ void fpga_mtrx_set(size_t m,           size_t n,
   ctl[CTL_SIZES] = fill_sizes(m, n);
   ctl[CTL_OP]    = fill_blk_adr1(C, MATH_OP_SET);
 
-  fpga_mtrx_wait_polling();
+  wait_polling();
 }
 
 /**
@@ -425,7 +427,7 @@ void fpga_mtrx_eye(size_t m,
   ctl[CTL_SIZES] = fill_sizes(m, m);
   ctl[CTL_OP]    = fill_blk_adr1(C, MATH_OP_EYE);
 
-  fpga_mtrx_wait_polling();
+  wait_polling();
 }
 
 
@@ -591,23 +593,17 @@ void fpga_dot_test(size_t m, size_t p, size_t n,
                    size_t A, size_t B, size_t C,
                    fpgaword_t *ctl) {
 
-//  manual_fill_rand(mtrx_pool[A], m, n);
-//  manual_fill_rand(mtrx_pool[B], m, n);
-//  manual_fill_copy(fpga_pool[A], mtrx_pool[A], m, n);
-//  manual_fill_copy(fpga_pool[B], mtrx_pool[B], m, n);
+  manual_fill_rand(mtrx_pool[A], m, p);
+  manual_fill_rand(mtrx_pool[B], p, n);
+  manual_fill_copy(fpga_pool[A], mtrx_pool[A], m, p);
+  manual_fill_copy(fpga_pool[B], mtrx_pool[B], p, n);
+  manual_fill_pattern(mtrx_pool[C], 666, false, m, n);
+  manual_fill_copy(fpga_pool[C], mtrx_pool[C], m, n);
 
-  manual_fill_pattern(mtrx_pool[A], 1, true, m, n);
-  manual_fill_pattern(mtrx_pool[B], 8, true, m, n);
-  manual_fill_copy(fpga_pool[A], mtrx_pool[A], m, n);
-  manual_fill_copy(fpga_pool[B], mtrx_pool[B], m, n);
-
-  manual_fill_pattern(mtrx_pool[C], 3, false, 31, 31);
-  manual_fill_copy(fpga_pool[C], mtrx_pool[C], 31, 31);
-  manual_fill_copy(fpga_pool[3], mtrx_pool[C], 31, 31);
-  manual_fill_copy(fpga_pool[4], mtrx_pool[C], 31, 31);
-  manual_fill_copy(fpga_pool[5], mtrx_pool[C], 31, 31);
-  manual_fill_copy(fpga_pool[6], mtrx_pool[C], 31, 31);
-  manual_fill_copy(fpga_pool[7], mtrx_pool[C], 31, 31);
+//  manual_fill_pattern(mtrx_pool[A], rand() & 7, false, m, p);
+//  manual_fill_pattern(mtrx_pool[B], rand() & 7, true, p, n);
+//  manual_fill_copy(fpga_pool[A], mtrx_pool[A], m, p);
+//  manual_fill_copy(fpga_pool[B], mtrx_pool[B], p, n);
 
   soft_mtrx_dot(m, p, n, A, B, C);
 
@@ -966,26 +962,26 @@ void test_fpga_rand(fpgaword_t *ctl, size_t turns) {
   while(turns--) {
     rand_generate_mpn(&m, &p, &n);
     rand_generate_ABC(&A, &B, &C);
-    fpga_dot_test(1, 2, 1, 0, 1, 2, ctl);
+    //fpga_dot_test(m, p, n, A, B, C, ctl);
 
-//    uint32_t op = rand();
-//    switch (op & 3){
-//    case 0:
-//      fpga_dot_test(m, p, n, A, B, C, ctl);
-//      break;
-//    case 1:
-//      fpga_add_test(m,    n, A, B, C, ctl);
-//      break;
-//    case 2:
-//      fpga_mul_test(m,    n, A, B, C, ctl);
-//      break;
-//    case 3:
-//      fpga_mov_test(m,    n, A,    C, ctl);
-//      break;
-//    default:
-//      osalSysHalt("");
-//      break;
-//    }
+    uint32_t op = rand();
+    switch (op & 3){
+    case 0:
+      fpga_dot_test(m, p, n, A, B, C, ctl);
+      break;
+    case 1:
+      fpga_add_test(m,    n, A, B, C, ctl);
+      break;
+    case 2:
+      fpga_mul_test(m,    n, A, B, C, ctl);
+      break;
+    case 3:
+      fpga_mov_test(m,    n, A,    C, ctl);
+      break;
+    default:
+      osalSysHalt("");
+      break;
+    }
   }
 }
 
@@ -1205,7 +1201,7 @@ void test_fpga_memory_isolation(void) {
   }
 
   // backward fill
-  for (size_t i=FPGA_MTRX_BRAMS_CNT; i>0; i--) {
+  for (size_t i=(FPGA_MTRX_BRAMS_CNT-1); i>0; i--) {
     manual_fill_rand(mtrx_pool[i], m, n);
     manual_fill_copy(fpga_pool[i], mtrx_pool[i], m, n);
   }
@@ -1248,11 +1244,17 @@ void fpga_mul_test(FPGADriver *fpgap, size_t turns) {
 
   fpgaword_t *ctl = fpgaGetCmdSlice(fpgap, FPGA_WB_SLICE_MUL_CTL);
 
+  FPGAMathRst(true);
+  osalThreadSleepMilliseconds(100);
+  FPGAMathRst(false);
+
   while(turns--) {
     osalThreadSleep(1);
 
     srand(chSysGetRealtimeCounterX());
     init_rand_pool();
+
+    wait_polling();
 
     test_fpga_rand(ctl, 200);
     test_fpga_corner(ctl);
