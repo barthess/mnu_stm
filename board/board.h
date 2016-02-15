@@ -954,7 +954,7 @@
                                      PIN_MODE_INPUT(GPIOH_PIN7) |             \
                                      PIN_MODE_ALTERNATE(GPIOH_MCU_I2C_SDA) |  \
                                      PIN_MODE_OUTPUT(GPIOH_NVRAM_PWR) |       \
-                                     PIN_MODE_INPUT(GPIOH_FPGA_IO10) |        \
+                                     PIN_MODE_OUTPUT(GPIOH_FPGA_IO10) |       \
                                      PIN_MODE_INPUT(GPIOH_PIN11) |            \
                                      PIN_MODE_INPUT(GPIOH_PIN12) |            \
                                      PIN_MODE_INPUT(GPIOH_PIN13) |            \
@@ -986,7 +986,7 @@
                                      PIN_OSPEED_100M(GPIOH_PIN7) |            \
                                      PIN_OSPEED_2M(GPIOH_MCU_I2C_SDA) |       \
                                      PIN_OSPEED_2M(GPIOH_NVRAM_PWR) |         \
-                                     PIN_OSPEED_100M(GPIOH_FPGA_IO10) |       \
+                                     PIN_OSPEED_2M(GPIOH_FPGA_IO10) |         \
                                      PIN_OSPEED_100M(GPIOH_PIN11) |           \
                                      PIN_OSPEED_100M(GPIOH_PIN12) |           \
                                      PIN_OSPEED_100M(GPIOH_PIN13) |           \
@@ -1150,7 +1150,8 @@ extern "C" {
   bool FPGAbramDbgOk(void);
   bool FSMCDataFlushed(void);
   void FPGAMemAutoFill(bool enable);
-  bool FPGAMulRdy(void);
+  bool FPGAMathRdy(void);
+  void FPGAMathRst(bool active);
   unsigned int usb_lld_plug_state(void);
   void usb_lld_connect_bus_workaround(void);
   void usb_lld_disconnect_bus_workaround(void);

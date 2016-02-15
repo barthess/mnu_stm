@@ -19,6 +19,7 @@
 
 #include "fpga.h"
 #include "test/fpga_mul_test.hpp"
+#include "exti_local.hpp"
 
 /*
  ******************************************************************************
@@ -75,6 +76,8 @@ int main(void) {
 
   fpgaObjectInit(&FPGAD1);
   fpgaStart(&FPGAD1);
+
+  Exti.start();
 
   osalThreadSleepMilliseconds(1000);
 

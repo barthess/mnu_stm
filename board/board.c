@@ -126,6 +126,15 @@ void FPGAMemAutoFill(bool enable) {
     palClearPad(GPIOD, GPIOD_FPGA_IO5);
 }
 
-bool FPGAMulRdy(void) {
+bool FPGAMathRdy(void) {
   return PAL_HIGH == palReadPad(GPIOG, GPIOG_FPGA_IO9);
+}
+
+void FPGAMathRst(bool active) {
+  if (active) {
+    palSetPad(GPIOH, GPIOH_FPGA_IO10);
+  }
+  else {
+    palClearPad(GPIOH, GPIOH_FPGA_IO10);
+  }
 }

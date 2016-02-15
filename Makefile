@@ -122,6 +122,7 @@ CPPSRC = $(CHCPPSRC) \
 		src/i2c_sensor.cpp \
 		src/tmp75.cpp \
 		src/adc_local.cpp \
+		src/exti_local.cpp \
 		cli/cli.cpp \
 		cli/cli_cmd.cpp \
 		src/fpga/test/fpga_led_test.cpp \
