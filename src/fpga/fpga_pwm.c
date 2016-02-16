@@ -55,7 +55,7 @@ void fpgapwmStart(FpgaPwm *pwmp, const FPGADriver *fpgap) {
 
   osalDbgCheck(fpgap->state == FPGA_READY);
 
-  pwmp->pwm = fpgaGetCmdSlice(fpgap, FPGA_WB_SLICE_PWM_ICU);
+  pwmp->pwm = fpgaGetSlicePtr(fpgap, FPGA_WB_SLICE_PWM_ICU);
   pwmp->state = FPGAPWM_READY;
 }
 

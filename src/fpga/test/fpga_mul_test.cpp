@@ -180,7 +180,7 @@ static void mtrx_compare_exact(const T *soft_dat, const T *fpga_dat, size_t m, s
     if (fabsf(tmp1 - tmp2) > 0) {
       red_led_on();
       err_cnt++;
-      //osalSysHalt("");
+      osalSysHalt("");
     }
   }
 }
@@ -204,7 +204,7 @@ static void wait_polling(void) {
 /**
  *
  */
-fpgaword_t fill_sizes(size_t m, size_t p, size_t n) {
+fpgaword_t fill_sizes_3(size_t m, size_t p, size_t n) {
 
   fpgaword_t ret;
 
@@ -222,7 +222,7 @@ fpgaword_t fill_sizes(size_t m, size_t p, size_t n) {
 /**
  *
  */
-fpgaword_t fill_sizes(size_t m, size_t n) {
+fpgaword_t fill_sizes_2(size_t m, size_t n) {
   fpgaword_t ret;
 
   osalDbgCheck((m <= FPGA_MTRX_MAX_INDEX) &
@@ -313,8 +313,7 @@ void fpga_mtrx_dot(size_t m, size_t p, size_t n,
                    size_t A, size_t B, size_t C,
                    fpgaword_t *ctl) {
 
-  ctl[CTL_SIZES] = fill_sizes(m, p, n);
-  osalThreadSleepMilliseconds(1);
+  ctl[CTL_SIZES] = fill_sizes_3(m, p, n);
   ctl[CTL_OP]    = fill_blk_adr3(A, B, C, MATH_OP_DOT);
 
   wait_polling();
@@ -327,7 +326,7 @@ void fpga_mtrx_add(size_t m,           size_t n,
                    size_t A, size_t B, size_t C,
                    fpgaword_t *ctl) {
 
-  ctl[CTL_SIZES] = fill_sizes(m, n);
+  ctl[CTL_SIZES] = fill_sizes_2(m, n);
   ctl[CTL_OP]    = fill_blk_adr3(A, B, C, MATH_OP_ADD);
 
   wait_polling();
@@ -340,7 +339,7 @@ void fpga_mtrx_sub(size_t m,           size_t n,
                    size_t A, size_t B, size_t C,
                    fpgaword_t *ctl) {
 
-  ctl[CTL_SIZES] = fill_sizes(m, n);
+  ctl[CTL_SIZES] = fill_sizes_2(m, n);
   ctl[CTL_OP]    = fill_blk_adr3(A, B, C, MATH_OP_SUB);
 
   wait_polling();
@@ -353,7 +352,7 @@ void fpga_mtrx_mul(size_t m,           size_t n,
                    size_t A, size_t B, size_t C,
                    fpgaword_t *ctl) {
 
-  ctl[CTL_SIZES] = fill_sizes(m, n);
+  ctl[CTL_SIZES] = fill_sizes_2(m, n);
   ctl[CTL_OP]    = fill_blk_adr3(A, B, C, MATH_OP_MUL);
 
   wait_polling();
@@ -368,7 +367,7 @@ void fpga_mtrx_scale(size_t m,           size_t n,
 
   fill_constant(scale, ctl);
 
-  ctl[CTL_SIZES] = fill_sizes(m, n);
+  ctl[CTL_SIZES] = fill_sizes_2(m, n);
   ctl[CTL_OP]    = fill_blk_adr2(A, C, MATH_OP_SCALE);
 
   wait_polling();
@@ -381,7 +380,7 @@ void fpga_mtrx_cpy(size_t m,           size_t n,
                    size_t A,           size_t C,
                    fpgaword_t *ctl) {
 
-  ctl[CTL_SIZES] = fill_sizes(m, n);
+  ctl[CTL_SIZES] = fill_sizes_2(m, n);
   ctl[CTL_OP]    = fill_blk_adr2(A, C, MATH_OP_CPY);
 
   wait_polling();
@@ -394,7 +393,7 @@ void fpga_mtrx_trn(size_t m,           size_t n,
                    size_t A,           size_t C,
                    fpgaword_t *ctl) {
 
-  ctl[CTL_SIZES] = fill_sizes(m, n);
+  ctl[CTL_SIZES] = fill_sizes_2(m, n);
   ctl[CTL_OP]    = fill_blk_adr2(A, C, MATH_OP_TRN);
 
   wait_polling();
@@ -409,7 +408,7 @@ void fpga_mtrx_set(size_t m,           size_t n,
 
   fill_constant(set_val, ctl);
 
-  ctl[CTL_SIZES] = fill_sizes(m, n);
+  ctl[CTL_SIZES] = fill_sizes_2(m, n);
   ctl[CTL_OP]    = fill_blk_adr1(C, MATH_OP_SET);
 
   wait_polling();
@@ -424,7 +423,7 @@ void fpga_mtrx_eye(size_t m,
 
   fill_constant(set_val, ctl);
 
-  ctl[CTL_SIZES] = fill_sizes(m, m);
+  ctl[CTL_SIZES] = fill_sizes_2(m, m);
   ctl[CTL_OP]    = fill_blk_adr1(C, MATH_OP_EYE);
 
   wait_polling();
@@ -1239,10 +1238,10 @@ void fpga_mul_test(FPGADriver *fpgap, size_t turns) {
 
   // now math test
   for (size_t i=0; i<8; i++) {
-    fpga_pool[i] = (double *)fpgaGetCmdSlice(fpgap, FPGA_WB_SLICE_MUL_BUF0 + i);
+    fpga_pool[i] = (double *)fpgaGetSlicePtr(fpgap, FPGA_WB_SLICE_MUL_BUF0 + i);
   }
 
-  fpgaword_t *ctl = fpgaGetCmdSlice(fpgap, FPGA_WB_SLICE_MUL_CTL);
+  fpgaword_t *ctl = fpgaGetSlicePtr(fpgap, FPGA_WB_SLICE_MUL_CTL);
 
   FPGAMathRst(true);
   osalThreadSleepMilliseconds(100);

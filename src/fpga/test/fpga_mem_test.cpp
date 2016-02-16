@@ -4,7 +4,6 @@
 #include "pads.h"
 
 #include "memtest.h"
-#include "fpga_mul.h"
 #include "fpga_mem_test.hpp"
 
 using namespace chibios_rt;
@@ -163,7 +162,7 @@ void fpga_memtest(FPGADriver *fpgap, bool fpga_assistance, size_t turns,
 
   osalDbgCheck(fpgap->state == FPGA_READY);
 
-  memtest_struct.start = fpgaGetCmdSlice(fpgap, slice);
+  memtest_struct.start = fpgaGetSlicePtr(fpgap, slice);
   memtest_struct.size = depth * BRAM_WIDTH;
 
   time_measurement_t memtest_tm;

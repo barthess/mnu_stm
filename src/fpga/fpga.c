@@ -109,10 +109,16 @@ void fpgaStop(FPGADriver *fpgap) {
 }
 
 /**
- *
+ * @brief   Return pointer to specified slice
  */
-fpgaword_t * fpgaGetCmdSlice(const FPGADriver *fpgap, size_t N) {
+fpgaword_t * fpgaGetSlicePtr(const FPGADriver *fpgap, size_t N) {
+
+  osalDbgCheck(FPGA_READY == fpgap->state);
   osalDbgCheck(N < FPGA_WB_SLICE_CNT);
+
   return & fpgap->memspace[N * FPGA_WB_SLICE_SIZE];
 }
+
+
+
 

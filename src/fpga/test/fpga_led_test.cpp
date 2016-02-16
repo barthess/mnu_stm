@@ -48,7 +48,7 @@
 void fpga_led_test(FPGADriver *fpgap, size_t turns) {
   osalDbgCheck(fpgap->state == FPGA_READY);
 
-  fpgaword_t *ledp = fpgaGetCmdSlice(fpgap, FPGA_WB_SLICE_LED);
+  fpgaword_t *ledp = fpgaGetSlicePtr(fpgap, FPGA_WB_SLICE_LED);
   uint8_t pattern = 0;
   uint8_t mask = (1 << 6) - 1;
 

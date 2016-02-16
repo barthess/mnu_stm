@@ -112,7 +112,8 @@ CSRC = $(STARTUPSRC) \
        board/board.c \
        src/microrl.c \
        src/fpga/fpga.c \
-       src/fpga/fpga_pwm.c
+       src/fpga/fpga_pwm.c \
+       src/fpga/fpga_mtrx.c
 	
 # C++ sources that can be compiled in ARM or THUMB mode depending on the global
 # setting.

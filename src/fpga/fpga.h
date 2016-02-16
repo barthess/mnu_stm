@@ -7,8 +7,8 @@
 
 typedef uint16_t        fpgaword_t;         /* fpga talks with stm32 using 16-bit words */
 
-#define FPGA_WB_SLICE_SIZE    65536     /* address space size single wishbone slice in fpga_words */
-#define FPGA_WB_SLICE_CNT     16        /* total number of slices */
+#define FPGA_WB_SLICE_SIZE        65536     /* address space size single wishbone slice in fpga_words */
+#define FPGA_WB_SLICE_CNT         16        /* total number of slices */
 
 /* current FPGA firmware limitations */
 #define FPGA_MTRX_INDEX_WIDTH     5 /* number of bits used for matrix indexing*/
@@ -38,6 +38,10 @@ typedef uint16_t        fpgaword_t;         /* fpga talks with stm32 using 16-bi
 #define FPGA_WB_SLICE_RESERVED2   13
 #define FPGA_WB_SLICE_RESERVED3   14
 #define FPGA_WB_SLICE_RESERVED4   15
+
+#define FPGA_CTL_OP_OFFSET        0
+#define FPGA_CTL_SIZES_OFFSET     1
+#define FPGA_CTL_CONSTANT_OFFSET  4
 
 /**
  * @brief   Driver state machine possible states.
@@ -75,7 +79,7 @@ extern "C" {
   void fpgaObjectInit(FPGADriver *fpgap);
   void fpgaStart(FPGADriver *fpgap);
   void fpgaStop(FPGADriver *fpgap);
-  fpgaword_t * fpgaGetCmdSlice(const FPGADriver *fpgap, size_t N);
+  fpgaword_t * fpgaGetSlicePtr(const FPGADriver *fpgap, size_t N);
 #ifdef __cplusplus
 }
 #endif
