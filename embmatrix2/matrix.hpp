@@ -28,6 +28,7 @@ enum class init_type {
  *
  */
 enum class location {
+  uninit,
   ram,
   fpga
 };
@@ -44,6 +45,7 @@ public:
   /* pool indices for faster malloc/free */
   size_t fpga_idx = ~0;
   size_t ram_idx  = get_pool_index();
+  location loc = location::uninit;
 
 public:
 
@@ -61,7 +63,15 @@ public:
    */
   Matrix(void) {
     matrixDbgPrint("Matrix default constructor\n");
-    default_ctor(init_type::none, 0);
+    default_ctor(location::ram, init_type::none, 0);
+  }
+
+  /**
+   *
+   */
+  Matrix(location loc) {
+    matrixDbgPrint("Matrix default constructor\n");
+    default_ctor(loc, init_type::none, 0);
   }
 
   /**
@@ -69,7 +79,15 @@ public:
    */
   Matrix(init_type it, T pattern) {
     matrixDbgPrint("Matrix pattern constructor\n");
-    default_ctor(it, pattern);
+    default_ctor(location::ram, it, pattern);
+  }
+
+  /**
+   *
+   */
+  Matrix(location loc, init_type it, T pattern) {
+    matrixDbgPrint("Matrix pattern constructor\n");
+    default_ctor(loc, it, pattern);
   }
 
   /**
@@ -83,13 +101,14 @@ public:
   void operator = (const Matrix &src) = delete;
 
   /**
-   *
+   * @brief Move constructor.
    */
   Matrix(Matrix &&src) {
     matrixDbgPrint("Matrix move constructor\n");
     this->M = src.M;
     this->fpga_idx = src.fpga_idx;
     this->ram_idx = src.ram_idx;
+    this->loc = src.loc;
     src.M = nullptr;
   }
 
@@ -107,6 +126,7 @@ public:
       this->M = src.M;
       this->fpga_idx = src.fpga_idx;
       this->ram_idx = src.ram_idx;
+      this->loc = src.loc;
       src.M = nullptr;
       return *this;
     }
@@ -115,13 +135,8 @@ public:
   /**
    *
    */
-  location get_location(void) {
-    matrixDbgCheck(nullptr != this->M);
-
-    if ((this->M > 0x60000000) && (this->M < (0x60000000 + 0x200000)))
-      return location::fpga;
-    else
-      return location::ram;
+  location get_location(void) const {
+    return this->loc;
   }
 
   /**
@@ -147,7 +162,7 @@ public:
   /**
    * @brief Return matrix size in bytes
    */
-  constexpr size_t msize(void) {
+  constexpr size_t msize(void) const {
     return sizeof(T) * r * c;
   }
 
@@ -180,12 +195,17 @@ private:
   /**
    *
    */
-  void default_ctor(init_type it, double val) {
-    if (FPGA_PRESENT && (sizeof(T) == sizeof(double)) && (r*c > FPGA_SUITABLE_LEN)) {
+  void default_ctor(location loc, init_type it, double val) {
+    switch(loc) {
+    case (location::fpga):
       fpga_ctor(it, val);
-    }
-    else {
+      break;
+    case(location::ram):
       ram_ctor(it, val);
+      break;
+    default:
+      osalSysHalt("Unhandled case");
+      break;
     }
   }
 
@@ -193,6 +213,8 @@ private:
    *
    */
   void fpga_ctor(init_type it, double val) {
+
+    matrixDbgCheck(FPGA_PRESENT && (sizeof(T) == sizeof(double)));
 
     this->M = fpga_malloc(&this->fpga_idx, this->msize());
 
@@ -208,12 +230,15 @@ private:
       fpgaMtrxDia(&MTRXD1, r, this->fpga_idx, val);
       break;
     }
+
+    this->loc = location::fpga;
   }
 
   /**
    *
    */
   void ram_ctor(init_type it, double val) {
+
     this->M = static_cast<T *>(mempool_malloc(this->ram_idx, this->msize()));
 
     switch(it) {
@@ -228,6 +253,8 @@ private:
       this->soft_set_diag(val);
       break;
     }
+
+    this->loc = location::ram;
   }
 
   /**
@@ -274,19 +301,42 @@ private:
   }
 };
 
-
-
-enum class op_type {
-  dot = 11,
-  add = 2,
-  mul = 3
-};
-
 /**
  *
  */
-location strategy(size_t m, size_t p, size_t n, op_type op) {
+template <size_t m, size_t p, size_t n>
+location strategy_dot(const Matrix<double, m, p> &A, const Matrix<double, p, n> &B) {
+  uint32_t t_fpga = 0;
+  uint32_t t_ram  = 0;
+  uint32_t ram2fpga_speed = 20 * 6; // 20 ticks * 6ns уточнить при старте умножителя
+  uint32_t fpga2ram_speed = 40 * 6; // 40 ticks * 6ns уточнить при старте умножителя
+  uint32_t soft_dot_speed;
+  uint32_t fpga_dot_speed;
+  uint32_t fpga_dot_lat;
 
+  if (location::ram == A.loc)
+    t_fpga += m*p*ram2fpga_speed;
+  else
+    t_ram  += m*p*fpga2ram_speed;
+
+  if (location::ram == B.loc)
+    t_fpga += p*n*ram2fpga_speed;
+  else
+    t_ram  += p*n*fpga2ram_speed;
+
+  // add (possible) fpga->ram eviction time
+  t_fpga += fpga_malloc_eviction_elements() * fpga2ram_speed;
+
+  // сложность операции будем считать пропорциональной произведению размерностей
+  t_ram  += m*p*n * soft_dot_speed;
+  t_fpga += m*p*n * fpga_dot_speed + fpga_dot_lat;
+
+  if (t_fpga > t_ram) {
+    return location::ram;
+  }
+  else {
+    return location::fpga;
+  }
 }
 
 /**
@@ -296,11 +346,13 @@ template <typename T, size_t m, size_t p, size_t n>
 Matrix<T, m, n> operator * (const Matrix<T, m, p> &A,
                             const Matrix<T, p, n> &B) {
 
-  Matrix<T, m, n> C(strategy(m, p, n, op_type::dot));
+  тут надо автоматически переместить данные куда надо
+  Matrix<T, m, n> C(location::fpga);
   matrixDbgPrint("Matrix multiply operator\n");
   matrix_multiply(m, p, n, A.M, B.M, C.M);
   return C;
 }
+
 
 } /* namespace matrix */
 
