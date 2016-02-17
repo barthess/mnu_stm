@@ -130,6 +130,8 @@ CPPSRC = $(CHCPPSRC) \
 		src/fpga/test/fpga_mem_test.cpp \
 		src/fpga/test/fpga_mul_test.cpp \
 		src/fpga/test/fpga_stub_test.cpp \
+		embmatrix2/matrix_memory.cpp \
+		embmatrix2/matrix_ram_pool.cpp \
 		main_wb_mul_test.cpp
 
 # C sources to be compiled in ARM mode regardless of the global setting.

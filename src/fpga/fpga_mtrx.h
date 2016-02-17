@@ -66,10 +66,13 @@ extern "C" {
   void fpgaMtrxObjectInit(Mtrx *mtrxp);
   void fpgaMtrxStart(Mtrx *mtrxp, const FPGADriver *fpgap);
   void fpgaMtrxStop(Mtrx *mtrxp);
-  double* fpgaMtrxMalloc(Mtrx *mtrxp);
-  void fpgaMtrxFree(Mtrx *mtrxp, double *slice);
+  double* fpgaMtrxMalloc(Mtrx *mtrxp, size_t *pool_idx);
+  void fpgaMtrxFree(Mtrx *mtrxp, const double *slice, size_t pool_idx);
+  double* fpgaMtrxDataPtr(Mtrx *mtrxp, size_t pool_idx);
   void fpgaMtrxDot(Mtrx *mtrxp, size_t m, size_t p, size_t n,
                     const double *A, const double *B, double *C);
+  void fpgaMtrxSet(Mtrx *mtrxp, size_t m, size_t n, size_t C, double val);
+  void fpgaMtrxDia(Mtrx *mtrxp, size_t m, size_t C, double val);
 #ifdef __cplusplus
 }
 #endif

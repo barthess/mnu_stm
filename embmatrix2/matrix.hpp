@@ -7,22 +7,53 @@
 #include "matrix_osal.hpp"
 #include "matrix_soft.hpp"
 
-#define MATRIX_COPY_CTOR_ENABLED 1
-#define MATRIX_COPY_OPERATOR_ENABLED 1
+#define MATRIX_COPY_CTOR_ENABLED      1
+#define MATRIX_COPY_OPERATOR_ENABLED  1
+
+#define FPGA_PRESENT          1
+#define FPGA_SUITABLE_LEN     16 // number of elements of type double
 
 namespace matrix {
 
+/**
+ *
+ */
+enum class init_type {
+  none,
+  set,
+  dia
+};
+
+/**
+ *
+ */
+enum class location {
+  ram,
+  fpga
+};
+
+/**
+ *
+ */
 template<typename T, size_t r, size_t c>
 class Matrix {
 
 public:
+  /* raw pointer */
   T *M;
-  bool tr;    /* transpose flag */
-  size_t idx; /* pool index cache for faster free() operation */
+  /* pool indices for faster malloc/free */
+  size_t fpga_idx = ~0;
+  size_t ram_idx  = get_pool_index();
 
 public:
+
+  static_assert((c>0) && (r>0), "Zero size forbidden");
+
+  /**
+   *
+   */
   ~Matrix(void) {
-    matrix_free(idx, M);
+    this->mem_free();
   }
 
   /**
@@ -30,83 +61,36 @@ public:
    */
   Matrix(void) {
     matrixDbgPrint("Matrix default constructor\n");
-    _default_ctor();
+    default_ctor(init_type::none, 0);
   }
 
   /**
-   * @brief   Copy constructor. Keep it for testing
+   *
    */
-#if MATRIX_COPY_CTOR_ENABLED
-  Matrix(const Matrix &src){
-    matrixDbgPrint("Matrix copy constructor\n");
-    _default_ctor();
-    memcpy(this->M, src.M, msize());
-    this->tr = src.tr;
+  Matrix(init_type it, T pattern) {
+    matrixDbgPrint("Matrix pattern constructor\n");
+    default_ctor(it, pattern);
   }
-#else
-  Matrix(const Matrix &src) = delete; /* Copy forbidden */
-#endif /* MATRIX_COPY_CTOR_FORBIDDEN */
 
   /**
-   * @brief Copy operator
+   * @brief   Copy constructor forbidden
    */
-#if MATRIX_COPY_OPERATOR_ENABLED
-  Matrix& operator = (const Matrix &src) {
-    matrixDbgPrint("Matrix copy operator\n");
-    if (this == &src) {
-      return *this;
-    } else {
-      memcpy(this->M, src.M, msize());
-      this->tr = src.tr;
-      return *this;
-    }
-  }
-#else
-  void operator = (const Matrix &src) = delete; /* Assign forbidden */
-#endif /* MATRIX_COPY_OPERATOR_ENABLED */
+  Matrix(const Matrix &src) = delete;
+
+  /**
+   * @brief   Assignment forbidden
+   */
+  void operator = (const Matrix &src) = delete;
 
   /**
    *
    */
   Matrix(Matrix &&src) {
     matrixDbgPrint("Matrix move constructor\n");
-    tr = src.tr;
-    M = src.M;
+    this->M = src.M;
+    this->fpga_idx = src.fpga_idx;
+    this->ram_idx = src.ram_idx;
     src.M = nullptr;
-  }
-
-  /**
-   *
-   */
-  Matrix(T pattern) {
-    matrixDbgPrint("Matrix pattern constructor\n");
-    _default_ctor();
-    for (size_t i=0; i<(c*r); i++)
-      M[i] = pattern;
-  }
-
-  /**
-   *
-   */
-  Matrix(const T *array, size_t arraysize) {
-    matrixDbgPrint("Matrix const array constructor\n");
-    matrixDbgCheck(msize() == arraysize); /* sizes mismatch */
-    _default_ctor();
-    memcpy(M, array, arraysize);
-  }
-
-  /**
-   *
-   */
-  void transpose_hack(void) {
-    this->tr = !this->tr;
-  }
-
-  /**
-   *
-   */
-  bool is_transposed(void) const {
-    return this->tr;
   }
 
   /**
@@ -119,14 +103,25 @@ public:
       return *this;
     }
     else {
-      matrix_free(idx, this->M);
-      this->tr  = src.tr;
-      this->M   = src.M;
-      this->idx = src.idx;
-      src.M   = nullptr;
-      src.idx = ~0;
+      this->mem_free();
+      this->M = src.M;
+      this->fpga_idx = src.fpga_idx;
+      this->ram_idx = src.ram_idx;
+      src.M = nullptr;
       return *this;
     }
+  }
+
+  /**
+   *
+   */
+  location get_location(void) {
+    matrixDbgCheck(nullptr != this->M);
+
+    if ((this->M > 0x60000000) && (this->M < (0x60000000 + 0x200000)))
+      return location::fpga;
+    else
+      return location::ram;
   }
 
   /**
@@ -182,10 +177,92 @@ private:
       return firstone - 3;
   }
 
-  void _default_ctor(void) {
-    static_assert((c>0) && (r>0), "Zero size forbidden");
-    //this->M = static_cast<T *>(matrix_malloc(msize()));
-    this->M = static_cast<T *>(matrix_malloc(pool_index(), msize()));
+  /**
+   *
+   */
+  void default_ctor(init_type it, double val) {
+    if (FPGA_PRESENT && (sizeof(T) == sizeof(double)) && (r*c > FPGA_SUITABLE_LEN)) {
+      fpga_ctor(it, val);
+    }
+    else {
+      ram_ctor(it, val);
+    }
+  }
+
+  /**
+   *
+   */
+  void fpga_ctor(init_type it, double val) {
+
+    this->M = fpga_malloc(&this->fpga_idx, this->msize());
+
+    switch(it) {
+    case init_type::none:
+      (void)val;
+      break;
+    case init_type::set:
+      fpgaMtrxSet(&MTRXD1, r, c, this->fpga_idx, val);
+      break;
+    case init_type::dia:
+      matrixDbgCheck(r == c);
+      fpgaMtrxDia(&MTRXD1, r, this->fpga_idx, val);
+      break;
+    }
+  }
+
+  /**
+   *
+   */
+  void ram_ctor(init_type it, double val) {
+    this->M = static_cast<T *>(mempool_malloc(this->ram_idx, this->msize()));
+
+    switch(it) {
+    case init_type::none:
+      (void)val;
+      break;
+    case init_type::set:
+      this->soft_pattern_fill(val);
+      break;
+    case init_type::dia:
+      matrixDbgCheck(r == c);
+      this->soft_set_diag(val);
+      break;
+    }
+  }
+
+  /**
+   *
+   */
+  void soft_pattern_fill(T pattern) {
+    for (size_t i=0; i<(c*r); i++) {
+      M[i] = pattern;
+    }
+  }
+
+  /**
+   *
+   */
+  void soft_set_diag(T val) {
+    size_t i = 0;
+
+    soft_pattern_fill(0);
+
+    while (i < (c*r)) {
+      this->M[i] = val;
+      i += r+1;
+    }
+  }
+
+  /**
+   *
+   */
+  void mem_free(void) {
+    if (location::fpga == get_location()) {
+      fpga_free(M, fpga_idx);
+    }
+    else {
+      mempool_free(M, ram_idx);
+    }
   }
 
   /**
@@ -197,37 +274,35 @@ private:
   }
 };
 
+
+
+enum class op_type {
+  dot = 11,
+  add = 2,
+  mul = 3
+};
+
+/**
+ *
+ */
+location strategy(size_t m, size_t p, size_t n, op_type op) {
+
+}
+
 /**
  * Multiplication operator
  */
-template <typename T, size_t m, size_t n, size_t p>
-Matrix<T, m, p> operator * (const Matrix<T, m, n> &left,
-                            const Matrix<T, n, p> &right) {
-  Matrix<T, m, p> ret;
+template <typename T, size_t m, size_t p, size_t n>
+Matrix<T, m, n> operator * (const Matrix<T, m, p> &A,
+                            const Matrix<T, p, n> &B) {
+
+  Matrix<T, m, n> C(strategy(m, p, n, op_type::dot));
   matrixDbgPrint("Matrix multiply operator\n");
-
-  if (!left.tr && !right.tr)
-    matrix_multiply(m, n, p, left.M, right.M, ret.M);
-  else if (left.tr && !right.tr)
-    matrix_multiply_TA(m, n, p, left.M, right.M, ret.M);
-  else if (!left.tr && right.tr)
-    matrix_multiply_TB(m, n, p, left.M, right.M, ret.M);
-  else
-    matrix_multiply_TAB(m, n, p, left.M, right.M, ret.M);
-
-  return ret;
+  matrix_multiply(m, p, n, A.M, B.M, C.M);
+  return C;
 }
-
-/**
- * Scale operator
- */
-template <typename T, size_t m, size_t n>
-Matrix<T, m, n> operator * (const Matrix<T, m, n> &left, T scale) {
-  Matrix<T, m, n> ret;
-  matrix_scale(ret.M, left.M, scale, m*n);
-  return ret;
-}
-
 
 } /* namespace matrix */
+
 #endif /* MATRIX_HPP_ */
+

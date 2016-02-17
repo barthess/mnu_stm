@@ -8,7 +8,7 @@
 #include "fpga_mul_test.hpp"
 #include "fpga_mem_test.hpp"
 
-#include "matrix_primitives.hpp"
+#include "embmatrix2/matrix_soft.hpp"
 
 /*
  ******************************************************************************
@@ -275,7 +275,7 @@ fpgaword_t _generate_B(fpgaword_t A, fpgaword_t C) {
 /**
  * @brief Using same slice address forbidden
  */
-fpgaword_t fill_blk_adr2(fpgaword_t A, fpgaword_t C, fpgaword_t opcode) {
+fpgaword_t fill_blk_adr_2(fpgaword_t A, fpgaword_t C, fpgaword_t opcode) {
 
   fpgaword_t B = _generate_B(A, C);
   return _fill_blk_adr(A, B, C, opcode);
@@ -284,7 +284,7 @@ fpgaword_t fill_blk_adr2(fpgaword_t A, fpgaword_t C, fpgaword_t opcode) {
 /**
  * @brief Using same slice address forbidden
  */
-fpgaword_t fill_blk_adr1(fpgaword_t C, fpgaword_t opcode) {
+fpgaword_t fill_blk_adr_1(fpgaword_t C, fpgaword_t opcode) {
 
   fpgaword_t A = 0;
   while (A == C) {
@@ -368,7 +368,7 @@ void fpga_mtrx_scale(size_t m,           size_t n,
   fill_constant(scale, ctl);
 
   ctl[CTL_SIZES] = fill_sizes_2(m, n);
-  ctl[CTL_OP]    = fill_blk_adr2(A, C, MATH_OP_SCALE);
+  ctl[CTL_OP]    = fill_blk_adr_2(A, C, MATH_OP_SCALE);
 
   wait_polling();
 }
@@ -381,7 +381,7 @@ void fpga_mtrx_cpy(size_t m,           size_t n,
                    fpgaword_t *ctl) {
 
   ctl[CTL_SIZES] = fill_sizes_2(m, n);
-  ctl[CTL_OP]    = fill_blk_adr2(A, C, MATH_OP_CPY);
+  ctl[CTL_OP]    = fill_blk_adr_2(A, C, MATH_OP_CPY);
 
   wait_polling();
 }
@@ -394,7 +394,7 @@ void fpga_mtrx_trn(size_t m,           size_t n,
                    fpgaword_t *ctl) {
 
   ctl[CTL_SIZES] = fill_sizes_2(m, n);
-  ctl[CTL_OP]    = fill_blk_adr2(A, C, MATH_OP_TRN);
+  ctl[CTL_OP]    = fill_blk_adr_2(A, C, MATH_OP_TRN);
 
   wait_polling();
 }
@@ -409,7 +409,7 @@ void fpga_mtrx_set(size_t m,           size_t n,
   fill_constant(set_val, ctl);
 
   ctl[CTL_SIZES] = fill_sizes_2(m, n);
-  ctl[CTL_OP]    = fill_blk_adr1(C, MATH_OP_SET);
+  ctl[CTL_OP]    = fill_blk_adr_1(C, MATH_OP_SET);
 
   wait_polling();
 }
@@ -424,7 +424,7 @@ void fpga_mtrx_eye(size_t m,
   fill_constant(set_val, ctl);
 
   ctl[CTL_SIZES] = fill_sizes_2(m, m);
-  ctl[CTL_OP]    = fill_blk_adr1(C, MATH_OP_EYE);
+  ctl[CTL_OP]    = fill_blk_adr_1(C, MATH_OP_EYE);
 
   wait_polling();
 }
@@ -457,7 +457,7 @@ void soft_mtrx_add(size_t m,           size_t n,
                    size_t A, size_t B, size_t C) {
   m++;
   n++;
-  matrix::matrix_add(m*n, mtrx_pool[A], mtrx_pool[B], mtrx_pool[C]);
+  matrix::matrix_soft_add(m*n, mtrx_pool[A], mtrx_pool[B], mtrx_pool[C]);
 }
 
 /**
@@ -467,7 +467,7 @@ void soft_mtrx_sub(size_t m,           size_t n,
                    size_t A, size_t B, size_t C) {
   m++;
   n++;
-  matrix::matrix_substract(m*n, mtrx_pool[A], mtrx_pool[B], mtrx_pool[C]);
+  matrix::matrix_soft_sub(m*n, mtrx_pool[A], mtrx_pool[B], mtrx_pool[C]);
 }
 
 /**
@@ -490,7 +490,7 @@ void soft_mtrx_scale(size_t m,           size_t n,
                      double scale) {
   m++;
   n++;
-  matrix::matrix_scale(mtrx_pool[C], mtrx_pool[A], scale, m*n);
+  matrix::matrix_soft_scale(m*n, mtrx_pool[A], mtrx_pool[C], scale);
 }
 
 /**
@@ -525,7 +525,7 @@ void soft_mtrx_trn(size_t m,           size_t n,
                    size_t A,           size_t C) {
   m++;
   n++;
-  matrix::matrix_deep_transpose(m, n, mtrx_pool[A], mtrx_pool[C]);
+  matrix::matrix_soft_transpose(m, n, mtrx_pool[A], mtrx_pool[C]);
 }
 
 /**

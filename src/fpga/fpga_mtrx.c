@@ -15,7 +15,7 @@
  ******************************************************************************
  */
 
-Mtrx MTRXD;
+Mtrx MTRXD1;
 
 /*
  ******************************************************************************
@@ -79,7 +79,7 @@ static fpgaword_t fill_sizes_3(size_t m, size_t p, size_t n) {
 /**
  *
  */
-static fpgaword_t fill_sizes_2(size_t m, size_t n) {
+fpgaword_t fill_sizes_2(size_t m, size_t n) {
   m -= 1;
   n -= 1;
 
@@ -117,7 +117,7 @@ static fpgaword_t fill_blk_adr(size_t A, size_t B, size_t C, size_t opcode) {
 /**
  *
  */
-static fpgaword_t fill_blk_adr3(size_t A, size_t B, size_t C, size_t opcode) {
+static fpgaword_t fill_blk_adr_3(size_t A, size_t B, size_t C, size_t opcode) {
   return fill_blk_adr(A, B, C, opcode);
 }
 
@@ -136,7 +136,21 @@ static fpgaword_t generate_safe_B(fpgaword_t A, fpgaword_t C) {
 /**
  * @brief Using same slice address forbidden
  */
-static fpgaword_t fill_blk_adr2(fpgaword_t A, fpgaword_t C, fpgaword_t opcode) {
+fpgaword_t fill_blk_adr_2(fpgaword_t A, fpgaword_t C, fpgaword_t opcode) {
+
+  fpgaword_t B = generate_safe_B(A, C);
+  return fill_blk_adr(A, B, C, opcode);
+}
+
+/**
+ * @brief Using same slice address forbidden
+ */
+fpgaword_t fill_blk_adr_1(fpgaword_t C, fpgaword_t opcode) {
+
+  fpgaword_t A = 0;
+  while (A == C) {
+    A++;
+  }
 
   fpgaword_t B = generate_safe_B(A, C);
   return fill_blk_adr(A, B, C, opcode);
@@ -145,7 +159,7 @@ static fpgaword_t fill_blk_adr2(fpgaword_t A, fpgaword_t C, fpgaword_t opcode) {
 /**
  *
  */
-static size_t get_idx(Mtrx *mtrxp, const double *slice) {
+size_t get_idx(Mtrx *mtrxp, const double *slice) {
 
   osalDbgCheck(NULL != slice);
 
@@ -221,22 +235,22 @@ void fpgaMtrxStop(Mtrx *mtrxp) {
  * @brief   Returns pointer to first empty BRAM slice.
  * @retval  NULL if pool empty or error happened.
  */
-double* fpgaMtrxMalloc(Mtrx *mtrxp) {
-
-  osalDbgCheck((MTRXMUL_READY == mtrxp->state) && (MTRXMUL_ACTIVE == mtrxp->state));
-
-  osalDbgCheck(mtrxp->empty < (1U << FPGA_MTRX_BRAMS_CNT)); // pool corrupted
+double * fpgaMtrxMalloc(Mtrx *mtrxp, size_t *pool_idx) {
 
   // pool is empty
   if (0 == mtrxp->empty) {
     return NULL;
   }
 
+  osalDbgCheck((MTRXMUL_READY == mtrxp->state) && (MTRXMUL_ACTIVE == mtrxp->state));
+  osalDbgCheck(mtrxp->empty < (1U << FPGA_MTRX_BRAMS_CNT)); // pool corrupted
+
   // find first empty slice
   for (size_t i=0; i<FPGA_MTRX_BRAMS_CNT; i++) {
     const uint32_t mask = 1U << i;
     if ((mtrxp->empty & mask) == mask) {
       mtrxp->empty &= ~mask;
+      *pool_idx = i;
       return mtrxp->pool[i];
     }
   }
@@ -249,7 +263,7 @@ double* fpgaMtrxMalloc(Mtrx *mtrxp) {
 /**
  *
  */
-void fpgaMtrxFree(Mtrx *mtrxp, double *slice) {
+void fpgaMtrxFree(Mtrx *mtrxp, const double *slice, size_t pool_idx) {
 
   // such behavior is C standard.
   if (NULL == slice) {
@@ -258,24 +272,73 @@ void fpgaMtrxFree(Mtrx *mtrxp, double *slice) {
 
   osalDbgCheck((MTRXMUL_READY == mtrxp->state) && (MTRXMUL_ACTIVE == mtrxp->state));
 
-  size_t idx = get_idx(mtrxp, slice);
-  mtrxp->empty |= 1U << idx;
+  mtrxp->empty |= 1U << pool_idx;
+}
+
+/**
+ *
+ */
+double * fpgaMtrxDataPtr(Mtrx *mtrxp, size_t pool_idx) {
+
+  osalDbgCheck((MTRXMUL_READY == mtrxp->state) && (MTRXMUL_ACTIVE == mtrxp->state));
+  osalDbgCheck(pool_idx < FPGA_MTRX_BRAMS_CNT);
+
+  return mtrxp->pool[pool_idx];
 }
 
 /**
  *
  */
 void fpgaMtrxDot(Mtrx *mtrxp, size_t m, size_t p, size_t n,
-             const double *A, const double *B, double *C){
+             size_t A, size_t B, size_t C){
 
   osalDbgCheck(MTRXMUL_READY == mtrxp->state);
 
   *mtrxp->sizes = fill_sizes_3(m, p, n);
-  *mtrxp->op = fill_blk_adr3(get_idx(mtrxp, A),
-                            get_idx(mtrxp, B),
-                            get_idx(mtrxp, C),
-                            MATH_OP_DOT);
+  *mtrxp->op = fill_blk_adr_3(A, B, C, MATH_OP_DOT);
   wait_polling();
 }
+
+/**
+ *
+ */
+void fpgaMtrxSet(Mtrx *mtrxp, size_t m, size_t n, size_t C, double val) {
+
+  osalDbgCheck(MTRXMUL_READY == mtrxp->state);
+
+  *mtrxp->constant = val;
+  *mtrxp->sizes = fill_sizes_2(m, n);
+  *mtrxp->op = fill_blk_adr_1(C, MATH_OP_SET);
+
+  wait_polling();
+}
+
+/**
+ *
+ */
+void fpgaMtrxDia(Mtrx *mtrxp, size_t m, size_t C, double val) {
+
+  osalDbgCheck(MTRXMUL_READY == mtrxp->state);
+
+  *mtrxp->constant = val;
+  *mtrxp->sizes = fill_sizes_1(m);
+  *mtrxp->op = fill_blk_adr_1(C, MATH_OP_EYE);
+
+  wait_polling();
+}
+
+/**
+ *
+ */
+void fpgaMtrxCpy(Mtrx *mtrxp, size_t m, size_t n, size_t A, size_t C) {
+
+  osalDbgCheck(MTRXMUL_READY == mtrxp->state);
+
+  *mtrxp->sizes = fill_sizes_2(m, n);
+  *mtrxp->op = fill_blk_adr_2(A, C, MATH_OP_CPY);
+
+  wait_polling();
+}
+
 
 
