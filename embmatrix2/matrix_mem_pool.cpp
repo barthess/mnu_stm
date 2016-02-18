@@ -1,7 +1,5 @@
 #include "hal.h"
 
-#include "matrix_ram_pool.hpp"
-
 namespace matrix {
 
 /*
@@ -45,7 +43,7 @@ namespace matrix {
 /**
  *
  */
-void * mempool_malloc(size_t pool_index, size_t size) {
+void * pool_malloc(size_t pool_index, size_t size) {
   void *ret = nullptr;
 
 //  osalDbgCheck(pool_index < MATRIX_MEMPOOL_LEN);
@@ -61,7 +59,7 @@ void * mempool_malloc(size_t pool_index, size_t size) {
 /**
  *
  */
-void mempool_free(size_t pool_index, void *mem) {
+void pool_free(void *mem, size_t pool_index) {
   if (NULL != mem){
     //chPoolFree(&pool_array[pool_index], mem);
     osalSysHalt("write me");

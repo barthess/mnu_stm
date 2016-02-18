@@ -4,8 +4,11 @@
 #include <utility> // for std::move
 #include <cstring> // memcpy, memset
 
+#include "matrix_mem_pool.hpp"
+#include "matrix_mem_mgr.hpp"
 #include "matrix_osal.hpp"
-#include "matrix_soft.hpp"
+#include "matrix_soft_engine.hpp"
+#include "fpga_mtrx.h"
 
 #define MATRIX_COPY_CTOR_ENABLED      1
 #define MATRIX_COPY_OPERATOR_ENABLED  1
@@ -216,7 +219,7 @@ private:
 
     matrixDbgCheck(FPGA_PRESENT && (sizeof(T) == sizeof(double)));
 
-    this->M = fpga_malloc(&this->fpga_idx, this->msize());
+    this->M = static_cast<T *>(fpga_malloc(&this->fpga_idx, this->msize()));
 
     switch(it) {
     case init_type::none:
@@ -239,7 +242,7 @@ private:
    */
   void ram_ctor(init_type it, double val) {
 
-    this->M = static_cast<T *>(mempool_malloc(this->ram_idx, this->msize()));
+    this->M = static_cast<T *>(pool_malloc(this->ram_idx, this->msize()));
 
     switch(it) {
     case init_type::none:
@@ -288,7 +291,7 @@ private:
       fpga_free(M, fpga_idx);
     }
     else {
-      mempool_free(M, ram_idx);
+      pool_free(M, ram_idx);
     }
   }
 
@@ -306,30 +309,31 @@ private:
  */
 template <size_t m, size_t p, size_t n>
 location strategy_dot(const Matrix<double, m, p> &A, const Matrix<double, p, n> &B) {
+
   uint32_t t_fpga = 0;
   uint32_t t_ram  = 0;
   uint32_t ram2fpga_speed = 20 * 6; // 20 ticks * 6ns уточнить при старте умножителя
   uint32_t fpga2ram_speed = 40 * 6; // 40 ticks * 6ns уточнить при старте умножителя
-  uint32_t soft_dot_speed;
-  uint32_t fpga_dot_speed;
-  uint32_t fpga_dot_lat;
+  uint32_t soft_dot_speed = 0;
+  uint32_t fpga_dot_lat = 0;
+  uint32_t fpga_speed = 0;
 
   if (location::ram == A.loc)
-    t_fpga += m*p*ram2fpga_speed;
+    t_fpga += m*p * ram2fpga_speed;
   else
-    t_ram  += m*p*fpga2ram_speed;
+    t_ram  += m*p * fpga2ram_speed;
 
   if (location::ram == B.loc)
-    t_fpga += p*n*ram2fpga_speed;
+    t_fpga += p*n * ram2fpga_speed;
   else
-    t_ram  += p*n*fpga2ram_speed;
+    t_ram  += p*n * fpga2ram_speed;
 
   // add (possible) fpga->ram eviction time
-  t_fpga += fpga_malloc_eviction_elements() * fpga2ram_speed;
+  t_fpga += fpga_evict_prediction() * fpga2ram_speed;
 
   // сложность операции будем считать пропорциональной произведению размерностей
   t_ram  += m*p*n * soft_dot_speed;
-  t_fpga += m*p*n * fpga_dot_speed + fpga_dot_lat;
+  t_fpga += m*p*n * fpga_speed + fpga_dot_lat;
 
   if (t_fpga > t_ram) {
     return location::ram;
@@ -340,17 +344,59 @@ location strategy_dot(const Matrix<double, m, p> &A, const Matrix<double, p, n> 
 }
 
 /**
- * Multiplication operator
+ * Multiplication operator (single precision)
  */
-template <typename T, size_t m, size_t p, size_t n>
-Matrix<T, m, n> operator * (const Matrix<T, m, p> &A,
-                            const Matrix<T, p, n> &B) {
-
-  тут надо автоматически переместить данные куда надо
-  Matrix<T, m, n> C(location::fpga);
-  matrixDbgPrint("Matrix multiply operator\n");
-  matrix_multiply(m, p, n, A.M, B.M, C.M);
+template <size_t m, size_t p, size_t n>
+Matrix<float, m, n> operator * (const Matrix<float, m, p> &A,
+                                const Matrix<float, p, n> &B) {
+  matrixDbgPrint("Matrix multiply operator single\n");
+  Matrix<float, m, n> C(location::ram);
+  matrix_soft_dot(m, p, n, A.M, B.M, C.M);
   return C;
+}
+
+/**
+ * Multiplication operator (double precision)
+ */
+template <size_t m, size_t p, size_t n>
+Matrix<double, m, n> operator * (Matrix<double, m, p> &A,
+                                 Matrix<double, p, n> &B) {
+  matrixDbgPrint("Matrix multiply operator double\n");
+
+  const location loc = strategy_dot(A, B);
+  Matrix<double, m, n> C(loc);
+  matrix_dot_engine(A, B, C, loc);
+  return C;
+}
+
+/**
+ *
+ */
+template <size_t m, size_t p, size_t n>
+void matrix_dot_engine(Matrix<double, m, p> &A,
+                       Matrix<double, p, n> &B,
+                       Matrix<double, m, n> &C, location loc) {
+
+  if (location::fpga == loc){
+    if (A.loc != location::ram) {
+      fpga_settle(&A.M, m, n, &A.ram_idx);
+    }
+    if (B.loc != location::ram) {
+      fpga_settle(&B.M, m, n, &B.ram_idx);
+    }
+
+    fpgaMtrxDot(&MTRXD1, m, p, n, A.fpga_idx, B.fpga_idx, C.fpga_idx);
+  }
+  else {
+    if (A.loc != location::fpga) {
+      fpga_evict(A.fpga_idx);
+    }
+    if (B.loc != location::fpga) {
+      fpga_evict(B.fpga_idx);
+    }
+
+    matrix_soft_dot(m, p, n, A.M, B.M, C.M);
+  }
 }
 
 

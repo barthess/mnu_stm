@@ -20,6 +20,7 @@
 #include "fpga.h"
 #include "test/fpga_mul_test.hpp"
 #include "exti_local.hpp"
+#include "kalman.hpp"
 
 /*
  ******************************************************************************
@@ -82,6 +83,12 @@ int main(void) {
   osalThreadSleepMilliseconds(1000);
 
   fpga_mul_test(&FPGAD1, -1);
+
+  Kalman *kalman = new Kalman();
+  while (true) {
+    kalman->run();
+  }
+
 }
 
 

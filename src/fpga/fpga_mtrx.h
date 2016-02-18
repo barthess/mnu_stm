@@ -66,11 +66,18 @@ extern "C" {
   void fpgaMtrxObjectInit(Mtrx *mtrxp);
   void fpgaMtrxStart(Mtrx *mtrxp, const FPGADriver *fpgap);
   void fpgaMtrxStop(Mtrx *mtrxp);
-  double* fpgaMtrxMalloc(Mtrx *mtrxp, size_t *pool_idx);
-  void fpgaMtrxFree(Mtrx *mtrxp, const double *slice, size_t pool_idx);
-  double* fpgaMtrxDataPtr(Mtrx *mtrxp, size_t pool_idx);
-  void fpgaMtrxDot(Mtrx *mtrxp, size_t m, size_t p, size_t n,
-                    const double *A, const double *B, double *C);
+  bool fpgaMtrxHaveFreeSlice(Mtrx *mtrxp);
+  double* fpgaMtrxMalloc(Mtrx *mtrxp, size_t *slice_idx);
+  void fpgaMtrxFree(Mtrx *mtrxp, void *slice, size_t slice_idx);
+  double* fpgaMtrxDataPtr(Mtrx *mtrxp, size_t slice_idx);
+
+  void fpgaMtrxDot(Mtrx *mtrxp, size_t m, size_t p, size_t n, size_t A, size_t B, size_t C);
+  void fpgaMtrxAdd(Mtrx *mtrxp, size_t m, size_t n, size_t A, size_t B, size_t C);
+  void fpgaMtrxSub(Mtrx *mtrxp, size_t m, size_t n, size_t A, size_t B, size_t C);
+  void fpgaMtrxMul(Mtrx *mtrxp, size_t m, size_t n, size_t A, size_t B, size_t C);
+  void fpgaMtrxScale(Mtrx *mtrxp, size_t m, size_t n, size_t A, size_t C, double scale);
+  void fpgaMtrxCpy(Mtrx *mtrxp, size_t m, size_t n, size_t A, size_t C);
+  void fpgaMtrxTrn(Mtrx *mtrxp, size_t m, size_t n, size_t A, size_t C);
   void fpgaMtrxSet(Mtrx *mtrxp, size_t m, size_t n, size_t C, double val);
   void fpgaMtrxDia(Mtrx *mtrxp, size_t m, size_t C, double val);
 #ifdef __cplusplus

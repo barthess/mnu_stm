@@ -1,5 +1,5 @@
-#ifndef MATRIX_SOFT_HPP
-#define MATRIX_SOFT_HPP
+#ifndef MATRIX_SOFT_ENGINE_HPP
+#define MATRIX_SOFT_ENGINE_HPP
 
 #include <cstdint>
 #define _USE_MATH_DEFINES
@@ -155,4 +155,4 @@ int matrix_soft_inverse(int n, T *A){
 
 } //namespace matrix
 
-#endif /* MATRIX_SOFT_HPP */
+#endif /* MATRIX_SOFT_ENGINE_HPP */

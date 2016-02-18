@@ -8,7 +8,7 @@
 #include "fpga_mul_test.hpp"
 #include "fpga_mem_test.hpp"
 
-#include "embmatrix2/matrix_soft.hpp"
+#include "embmatrix2/matrix_soft_engine.hpp"
 
 /*
  ******************************************************************************
@@ -417,23 +417,17 @@ void fpga_mtrx_set(size_t m,           size_t n,
 /**
  *
  */
-void fpga_mtrx_eye(size_t m,
+void fpga_mtrx_dia(size_t m,
                                        size_t C,
                    fpgaword_t *ctl, double set_val) {
 
   fill_constant(set_val, ctl);
 
   ctl[CTL_SIZES] = fill_sizes_2(m, m);
-  ctl[CTL_OP]    = fill_blk_adr_1(C, MATH_OP_EYE);
+  ctl[CTL_OP]    = fill_blk_adr_1(C, MATH_OP_DIA);
 
   wait_polling();
 }
-
-
-
-
-
-
 
 /*****************************************************************************************
  * Software variants
@@ -531,7 +525,7 @@ void soft_mtrx_trn(size_t m,           size_t n,
 /**
  *
  */
-void soft_mtrx_eye(size_t m,
+void soft_mtrx_dia(size_t m,
                                        size_t C,
                    double set_val) {
   size_t i = 0;
@@ -539,12 +533,12 @@ void soft_mtrx_eye(size_t m,
   m++;
 
   for (i=0; i<m*m; i++) {
-    mtrx_pool[C][i] = set_val;
+    mtrx_pool[C][i] = 0;
   }
 
   i = 0;
   while (i < m*m) {
-    mtrx_pool[C][i] = 1;
+    mtrx_pool[C][i] = set_val;
     i += m+1;
   }
 }
@@ -711,11 +705,11 @@ void fpga_mov_test(size_t m,           size_t n,
 
   // Eye works correctly only with square matrices
   if (m == n) {
-    set_val = 666;
+    set_val = fast_rand_double();
     manual_fill_rand(mtrx_pool[C], m, n);
     manual_fill_copy(fpga_pool[C], mtrx_pool[A], m, n);
-    soft_mtrx_eye(m, C, set_val);
-    fpga_mtrx_eye(m, C, ctl, set_val);
+    soft_mtrx_dia(m, C, set_val);
+    fpga_mtrx_dia(m, C, ctl, set_val);
     mtrx_compare_exact(mtrx_pool[C], fpga_pool[C], m, n);
   }
 }
@@ -1067,8 +1061,8 @@ void multispep_eye(fpgaword_t m, fpgaword_t *ctl, size_t steps) {
 
   while(steps--) {
     rand_generate_ABC(&A, &B, &C);
-    soft_mtrx_eye(m, C, scale);
-    fpga_mtrx_eye(m, C, ctl, scale);
+    soft_mtrx_dia(m, C, scale);
+    fpga_mtrx_dia(m, C, ctl, scale);
   }
 }
 

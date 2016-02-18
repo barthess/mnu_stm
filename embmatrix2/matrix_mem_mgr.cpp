@@ -3,8 +3,9 @@
 
 #include "main.h"
 #include "fpga_mtrx.h"
-#include "matrix_ram_pool.hpp"
-#include "matrix_memory.hpp"
+
+#include "matrix_mem_pool.hpp"
+#include "matrix_mem_mgr.hpp"
 
 namespace matrix {
 
@@ -20,12 +21,12 @@ struct cache_record {
   void clear(void) {
     data = nullptr;
     ram_idx = nullptr;
-    size = 0;
+    len = 0;
     age = AGE_BORN_NOW;
   }
   double        **data;
   const size_t  *ram_idx;
-  size_t        size; // bytes
+  size_t        len; // in elements of type double
   uint32_t      age;
 };
 
@@ -72,10 +73,10 @@ void deep_copy(const double *src, double *dst, size_t len) {
 /**
  *
  */
-void update_cache(double **ram, const size_t *ram_idx, size_t size, size_t fpga_idx) {
+void update_cache(double **ram, const size_t *ram_idx, size_t len, size_t fpga_idx) {
   cache[fpga_idx].data    = ram;
   cache[fpga_idx].ram_idx = ram_idx;
-  cache[fpga_idx].size    = size;
+  cache[fpga_idx].len     = len;
   cache[fpga_idx].age     = AGE_BORN_NOW;
 }
 
@@ -87,7 +88,7 @@ size_t eviction_strategy(void) {
   size_t ret = 0; // default eviction candidate
 
   for(size_t i=0; i<FPGA_MTRX_BRAMS_CNT; i++) {
-    size_t S = cache[i].size;
+    size_t S = cache[i].len;
     if (S < smallest) {
       smallest = S;
       ret = i;
@@ -114,10 +115,10 @@ void fpga_evict_auto(void) {
 /**
  *
  */
-double * fpga_alloc(size_t *fpga_idx, size_t size) {
+void * fpga_malloc(size_t *fpga_idx, size_t size) {
   (void)size;
 
-  double *ret = fpgaMtrxMalloc(&MTRXD1, fpga_idx);
+  void *ret = fpgaMtrxMalloc(&MTRXD1, fpga_idx);
 
   if (nullptr == ret) {
     fpga_evict_auto();
@@ -131,23 +132,37 @@ double * fpga_alloc(size_t *fpga_idx, size_t size) {
 /**
  *
  */
-void fpga_free(const double *data, size_t pool_idx) {
+void fpga_free(void *data, size_t pool_idx) {
   fpgaMtrxFree(&MTRXD1, data, pool_idx);
 }
 
 /**
  * @brief   Deep move data from FPGA to RAM
  */
-void fpga_evict(size_t i) {
+void fpga_evict(size_t idx) {
 
-  const double *src = fpgaMtrxDataPtr(&MTRXD1, i);
-  double *dst = (double *)mempool_alloc(*cache[i].ram_idx, cache[i].size);
-  deep_copy(src, dst, cache[i].size/sizeof(double));
-  *cache[i].data = dst;
-  fpga_free(src, i);
+  double *src = fpgaMtrxDataPtr(&MTRXD1, idx);
+  double *dst = (double *)pool_malloc(*cache[idx].ram_idx, cache[idx].len*sizeof(double));
+  deep_copy(src, dst, cache[idx].len);
+  *cache[idx].data = dst;
+  fpga_free(src, idx);
 
   // delete reference from cache registry
-  cache[i].clear();
+  cache[idx].clear();
+}
+
+/**
+ * @brief   Return number of elements to be evicted from FPGA to RAM
+ * @retval  0 when there are some free slices in FPGA
+ */
+size_t fpga_evict_prediction(void) {
+
+  if (fpgaMtrxHaveFreeSlice(&MTRXD1)) {
+    return 0;
+  }
+  else {
+    return cache[eviction_strategy()].len;
+  }
 }
 
 /**
@@ -156,12 +171,12 @@ void fpga_evict(size_t i) {
 void fpga_settle(double **ram, size_t m, size_t n, const size_t *ram_idx) {
 
   size_t fpga_idx;
-  size_t size = m*n*sizeof(double);
-  double *dst = fpga_alloc(&fpga_idx, size);
+  size_t len = m * n;
+  double *dst = (double *)fpga_malloc(&fpga_idx, len*sizeof(double));
 
   deep_copy(*ram, dst, m*n);
-  update_cache(ram, ram_idx, size, fpga_idx);
-  mempool_free(*ram_idx, *ram);
+  update_cache(ram, ram_idx, len, fpga_idx);
+  pool_free(*ram, *ram_idx);
 }
 
 } // namespace
