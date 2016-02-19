@@ -60,12 +60,109 @@ void matrix_soft_dot(size_t m, size_t p, size_t n,
 }
 
 /**
+ * @brief   multiply matrix A(m x p) by  B(p x n), put result in C(m x n)
+ * @note    matrix A transposed
+ */
+template <typename T>
+void matrix_soft_dot_TA(size_t m, size_t p, size_t n,
+                        const T *A, const T *B, T *C) {
+  size_t i, j, k;
+  T tmp;
+
+  for(i=0; i<m; i++) {
+    for(j=0; j<n; j++) {
+      tmp = 0;
+      for(k=0; k<p; k++)
+        tmp += A[k*m + i] * B[k*n + j];
+      *C++ = tmp;
+    }
+  }
+}
+
+/**
+ * @brief   multiply matrix A(m x p) by  B(p x n), put result in C(m x n)
+ * @note    matrix B transposed
+ */
+template <typename T>
+void matrix_soft_dot_TB(size_t m, size_t p, size_t n,
+                        const T *A, const T *B, T *C) {
+  size_t i, j, k;
+  T tmp;
+
+  for(i=0; i<m; i++) {
+    for(j=0; j<n; j++) {
+      tmp = 0;
+      for(k=0; k<p; k++)
+        tmp += A[i*p + k] * B[j*p + k];
+      *C++ = tmp;
+    }
+  }
+}
+
+/**
+ * @brief   multiply matrix A(m x p) by  B(p x n), put result in C(m x n)
+ * @note    both A and B transposed
+ */
+template <typename T>
+void matrix_soft_dot_TAB(size_t m, size_t p, size_t n,
+                         const T *A, const T *B, T *C) {
+  size_t i, j, k;
+  T tmp;
+
+  for(i=0; i<m; i++) {
+    for(j=0; j<n; j++) {
+      tmp = 0;
+      for(k=0; k<p; k++)
+        tmp += A[k*m + i] * B[p*j + k];
+      *C++ = tmp;
+    }
+  }
+}
+
+/**
  * @brief     C[m x n] = A[m x n] + B[m x n];
  */
 template <typename T>
-void matrix_soft_add(size_t len, const T *A, const T *B, T *C) {
+void matrix_soft_add(size_t m, size_t n, const T *A, const T *B, T *C) {
+  const size_t len = m*n;
   for (size_t i=0; i<len; i++) {
-    C[i] = A[i] + B[i];
+    *C++ = A[i] + B[i];
+  }
+}
+
+/**
+ * @brief     C[m x n] = A[n x m] + B[m x n];
+ */
+template <typename T>
+void matrix_soft_add_TA(size_t m, size_t n, const T *A, const T *B, T *C) {
+  for (size_t i=0; i<m; i++) {
+    for (size_t j=0; j<n; j++) {
+      *C++ = A[i + j*m] + *B++;
+    }
+  }
+}
+
+/**
+ * @brief     C[m x n] = A[m x n] + B[n x m];
+ */
+template <typename T>
+void matrix_soft_add_TB(size_t m, size_t n, const T *A, const T *B, T *C) {
+  for (size_t i=0; i<m; i++) {
+    for (size_t j=0; j<n; j++) {
+      *C++ = *A++ + B[i + j*m];
+    }
+  }
+}
+
+/**
+ * @brief     C[m x n] = A[n x m] + B[n x m];
+ */
+template <typename T>
+void matrix_soft_add_TAB(size_t m, size_t n, const T *A, const T *B, T *C) {
+  for (size_t i=0; i<m; i++) {
+    for (size_t j=0; j<n; j++) {
+      *C++ = A[i + j*m] + B[i + j*m];
+    }
   }
 }
 
@@ -73,9 +170,46 @@ void matrix_soft_add(size_t len, const T *A, const T *B, T *C) {
  * @brief     C[m x n] = A[m x n] - B[m x n];
  */
 template <typename T>
-void matrix_soft_sub(size_t len, const T *A, const T *B, T *C) {
+void matrix_soft_sub(size_t m, size_t n, const T *A, const T *B, T *C) {
+  const size_t len = m*n;
   for (size_t i=0; i<len; i++) {
     C[i] = A[i] - B[i];
+  }
+}
+
+/**
+ * @brief     C[m x n] = A[n x m] - B[m x n];
+ */
+template <typename T>
+void matrix_soft_sub_TA(size_t m, size_t n, const T *A, const T *B, T *C) {
+  for (size_t i=0; i<m; i++) {
+    for (size_t j=0; j<n; j++) {
+      *C++ = A[i + j*m] - *B++;
+    }
+  }
+}
+
+/**
+ * @brief     C[m x n] = A[m x n] - B[n x m];
+ */
+template <typename T>
+void matrix_soft_sub_TB(size_t m, size_t n, const T *A, const T *B, T *C) {
+  for (size_t i=0; i<m; i++) {
+    for (size_t j=0; j<n; j++) {
+      *C++ = *A++ - B[i + j*m];
+    }
+  }
+}
+
+/**
+ * @brief     C[m x n] = A[n x m] - B[n x m];
+ */
+template <typename T>
+void matrix_soft_sub_TAB(size_t m, size_t n, const T *A, const T *B, T *C) {
+  for (size_t i=0; i<m; i++) {
+    for (size_t j=0; j<n; j++) {
+      *C++ = A[i + j*m] - B[i + j*m];
+    }
   }
 }
 

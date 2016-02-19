@@ -128,13 +128,9 @@ CPPSRC = $(CHCPPSRC) \
 		cli/cli_cmd.cpp \
 		src/fpga/test/fpga_led_test.cpp \
 		src/fpga/test/fpga_mem_test.cpp \
-		src/fpga/test/fpga_mul_test.cpp \
+		src/fpga/test/fpga_mtrx_test.cpp \
 		src/fpga/test/fpga_stub_test.cpp \
-		embmatrix2/matrix_mem_mgr.cpp \
-		embmatrix2/matrix_mem_pool.cpp \
-		embmatrix2/matrix_osal_chibios.cpp \
-		kalman.cpp \
-		main_wb_mul_test.cpp
+		main_wb_mtrx_test.cpp
 
 # C sources to be compiled in ARM mode regardless of the global setting.
 # NOTE: Mixing ARM and THUMB mode enables the -mthumb-interwork compiler

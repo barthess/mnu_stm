@@ -5,7 +5,7 @@
 #include "main.h"
 #include "pads.h"
 
-#include "fpga_mul_test.hpp"
+#include "fpga_mtrx_test.hpp"
 #include "fpga_mem_test.hpp"
 
 #include "embmatrix2/matrix_soft_engine.hpp"
@@ -451,7 +451,7 @@ void soft_mtrx_add(size_t m,           size_t n,
                    size_t A, size_t B, size_t C) {
   m++;
   n++;
-  matrix::matrix_soft_add(m*n, mtrx_pool[A], mtrx_pool[B], mtrx_pool[C]);
+  matrix::matrix_soft_add(m, n, mtrx_pool[A], mtrx_pool[B], mtrx_pool[C]);
 }
 
 /**
@@ -461,7 +461,7 @@ void soft_mtrx_sub(size_t m,           size_t n,
                    size_t A, size_t B, size_t C) {
   m++;
   n++;
-  matrix::matrix_soft_sub(m*n, mtrx_pool[A], mtrx_pool[B], mtrx_pool[C]);
+  matrix::matrix_soft_sub(m, n, mtrx_pool[A], mtrx_pool[B], mtrx_pool[C]);
 }
 
 /**
@@ -532,15 +532,27 @@ void soft_mtrx_dia(size_t m,
 
   m++;
 
+  // Old EYE code
   for (i=0; i<m*m; i++) {
-    mtrx_pool[C][i] = 0;
+    mtrx_pool[C][i] = set_val;
   }
 
   i = 0;
   while (i < m*m) {
-    mtrx_pool[C][i] = set_val;
+    mtrx_pool[C][i] = 1;
     i += m+1;
   }
+
+  // New diagonal code
+//  for (i=0; i<m*m; i++) {
+//    mtrx_pool[C][i] = 0;
+//  }
+//
+//  i = 0;
+//  while (i < m*m) {
+//    mtrx_pool[C][i] = set_val;
+//    i += m+1;
+//  }
 }
 
 
@@ -592,11 +604,6 @@ void fpga_dot_test(size_t m, size_t p, size_t n,
   manual_fill_copy(fpga_pool[B], mtrx_pool[B], p, n);
   manual_fill_pattern(mtrx_pool[C], 666, false, m, n);
   manual_fill_copy(fpga_pool[C], mtrx_pool[C], m, n);
-
-//  manual_fill_pattern(mtrx_pool[A], rand() & 7, false, m, p);
-//  manual_fill_pattern(mtrx_pool[B], rand() & 7, true, p, n);
-//  manual_fill_copy(fpga_pool[A], mtrx_pool[A], m, p);
-//  manual_fill_copy(fpga_pool[B], mtrx_pool[B], p, n);
 
   soft_mtrx_dot(m, p, n, A, B, C);
 
@@ -787,7 +794,6 @@ void test_add_corner(fpgaword_t *ctl) {
   const size_t A = 0;
   const size_t B = 1;
   const size_t C = 2;
-  //const size_t MAX_BRUTE_SIZE = 2;
 
   size_t m;
   size_t n;
@@ -955,7 +961,6 @@ void test_fpga_rand(fpgaword_t *ctl, size_t turns) {
   while(turns--) {
     rand_generate_mpn(&m, &p, &n);
     rand_generate_ABC(&A, &B, &C);
-    //fpga_dot_test(m, p, n, A, B, C, ctl);
 
     uint32_t op = rand();
     switch (op & 3){
@@ -1246,8 +1251,6 @@ void fpga_mul_test(FPGADriver *fpgap, size_t turns) {
 
     srand(chSysGetRealtimeCounterX());
     init_rand_pool();
-
-    wait_polling();
 
     test_fpga_rand(ctl, 200);
     test_fpga_corner(ctl);
