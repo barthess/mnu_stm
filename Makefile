@@ -5,7 +5,7 @@
 
 # Compiler options here.
 ifeq ($(USE_OPT),)
-  USE_OPT = -O3 -ggdb -fomit-frame-pointer -falign-functions=16
+  USE_OPT = -O0 -ggdb -fomit-frame-pointer -falign-functions=16
 endif
 
 # C specific options here (added to USE_OPT).
@@ -248,5 +248,5 @@ include $(RULESPATH)/rules.mk
 src/fpga/fpga.h : src/fpga/fpga_constants.h
 
 src/fpga/fpga_constants.h: ../xilinx/fsmc2wb/rtl/mtrx_math_constants.vhd
-	bash extract_fpga_constants.sh
+	bash src/fpga/extract_fpga_constants.sh $< $@
 

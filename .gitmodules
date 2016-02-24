@@ -1,0 +1,3 @@
+[submodule "src/fpga"]
+	path = src/fpga
+	url = git@github.com:barthess/chibi_fpga.git
