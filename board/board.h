@@ -42,6 +42,8 @@
 
 #define MPU6050_I2CD                I2CD3
 #define LSM303_I2CD                 I2CD3
+#define MS5806_I2CD                 I2CD3
+#define NPA700_I2CD                 I2CD3
 
 #define GPSSD                       SD2
 
@@ -49,7 +51,10 @@
 #define XBEE_BAUDRATE               115200
 #define XBEE_USE_CTS_RTS            TRUE
 
-#define ADIS_SPI                    SPID2
+#define MODSD                       SD1
+#define MOD_BAUDRATE                115200
+
+#define ADIS_SPI                    SPID1 // fake spi port for compileability only
 
 /*
  * Board voltages.
@@ -88,8 +93,8 @@
 #define GPIOB_JTDO                  3
 #define GPIOB_JTRST                 4
 #define GPIOB_PIN5                  5
-#define GPIOB_PIN6                  6
-#define GPIOB_PIN7                  7
+#define GPIOB_MOD_TX                6
+#define GPIOB_MOD_RX                7
 #define GPIOB_SDIO_D4               8
 #define GPIOB_SDIO_D5               9
 #define GPIOB_UBLOX_PPS             10
@@ -300,7 +305,7 @@
                                      PIN_PUPDR_FLOATING(GPIOA_PIN6) |         \
                                      PIN_PUPDR_FLOATING(GPIOA_PIN7) |         \
                                      PIN_PUPDR_FLOATING(GPIOA_MCU_I2C_SCL) |  \
-                                     PIN_PUPDR_PULLDOWN(GPIOA_USB_PRESENT) |  \
+                                     PIN_PUPDR_FLOATING(GPIOA_USB_PRESENT) |  \
                                      PIN_PUPDR_FLOATING(GPIOA_PIN10) |        \
                                      PIN_PUPDR_FLOATING(GPIOA_OTG_FS_DM) |    \
                                      PIN_PUPDR_FLOATING(GPIOA_OTG_FS_DP) |    \
@@ -345,19 +350,19 @@
  */
 #define VAL_GPIOB_MODER             (PIN_MODE_INPUT(GPIOB_PIN0) |             \
                                      PIN_MODE_INPUT(GPIOB_PIN1) |             \
-                                     PIN_MODE_INPUT(GPIOB_FPGA_IO1) |         \
+                                     PIN_MODE_OUTPUT(GPIOB_FPGA_IO1) |        \
                                      PIN_MODE_ALTERNATE(GPIOB_JTDO) |         \
                                      PIN_MODE_ALTERNATE(GPIOB_JTRST) |        \
                                      PIN_MODE_INPUT(GPIOB_PIN5) |             \
-                                     PIN_MODE_INPUT(GPIOB_PIN6) |             \
-                                     PIN_MODE_INPUT(GPIOB_PIN7) |             \
+                                     PIN_MODE_ALTERNATE(GPIOB_MOD_TX) |       \
+                                     PIN_MODE_ALTERNATE(GPIOB_MOD_RX) |       \
                                      PIN_MODE_ALTERNATE(GPIOB_SDIO_D4) |      \
                                      PIN_MODE_ALTERNATE(GPIOB_SDIO_D5) |      \
                                      PIN_MODE_INPUT(GPIOB_UBLOX_PPS) |        \
                                      PIN_MODE_INPUT(GPIOB_PPS4) |             \
                                      PIN_MODE_INPUT(GPIOB_PIN12) |            \
                                      PIN_MODE_INPUT(GPIOB_PIN13) |            \
-                                     PIN_MODE_ALTERNATE(GPIOB_ADIS_MISO) |     \
+                                     PIN_MODE_ALTERNATE(GPIOB_ADIS_MISO) |    \
                                      PIN_MODE_OUTPUT(GPIOB_FPGA_IO2))
 
 #define VAL_GPIOB_OTYPER            (PIN_OTYPE_PUSHPULL(GPIOB_PIN0) |         \
@@ -366,47 +371,47 @@
                                      PIN_OTYPE_PUSHPULL(GPIOB_JTDO) |         \
                                      PIN_OTYPE_PUSHPULL(GPIOB_JTRST) |        \
                                      PIN_OTYPE_PUSHPULL(GPIOB_PIN5) |         \
-                                     PIN_OTYPE_PUSHPULL(GPIOB_PIN6) |         \
-                                     PIN_OTYPE_PUSHPULL(GPIOB_PIN7) |         \
+                                     PIN_OTYPE_PUSHPULL(GPIOB_MOD_TX) |       \
+                                     PIN_OTYPE_PUSHPULL(GPIOB_MOD_RX) |       \
                                      PIN_OTYPE_PUSHPULL(GPIOB_SDIO_D4) |      \
                                      PIN_OTYPE_PUSHPULL(GPIOB_SDIO_D5) |      \
                                      PIN_OTYPE_PUSHPULL(GPIOB_UBLOX_PPS) |    \
                                      PIN_OTYPE_PUSHPULL(GPIOB_PPS4) |         \
                                      PIN_OTYPE_PUSHPULL(GPIOB_PIN12) |        \
                                      PIN_OTYPE_PUSHPULL(GPIOB_PIN13) |        \
-                                     PIN_OTYPE_PUSHPULL(GPIOB_ADIS_MISO) |     \
+                                     PIN_OTYPE_PUSHPULL(GPIOB_ADIS_MISO) |    \
                                      PIN_OTYPE_PUSHPULL(GPIOB_FPGA_IO2))
 #define VAL_GPIOB_OSPEEDR           (PIN_OSPEED_100M(GPIOB_PIN0) |            \
                                      PIN_OSPEED_100M(GPIOB_PIN1) |            \
-                                     PIN_OSPEED_100M(GPIOB_FPGA_IO1) |        \
+                                     PIN_OSPEED_2M(GPIOB_FPGA_IO1) |          \
                                      PIN_OSPEED_100M(GPIOB_JTDO) |            \
                                      PIN_OSPEED_100M(GPIOB_JTRST) |           \
                                      PIN_OSPEED_100M(GPIOB_PIN5) |            \
-                                     PIN_OSPEED_100M(GPIOB_PIN6) |            \
-                                     PIN_OSPEED_100M(GPIOB_PIN7) |            \
+                                     PIN_OSPEED_2M(GPIOB_MOD_TX) |            \
+                                     PIN_OSPEED_2M(GPIOB_MOD_RX) |            \
                                      PIN_OSPEED_100M(GPIOB_SDIO_D4) |         \
                                      PIN_OSPEED_100M(GPIOB_SDIO_D5) |         \
                                      PIN_OSPEED_100M(GPIOB_UBLOX_PPS) |       \
                                      PIN_OSPEED_100M(GPIOB_PPS4) |            \
                                      PIN_OSPEED_100M(GPIOB_PIN12) |           \
                                      PIN_OSPEED_100M(GPIOB_PIN13) |           \
-                                     PIN_OSPEED_100M(GPIOB_ADIS_MISO) |        \
-                                     PIN_OSPEED_100M(GPIOB_FPGA_IO2))
+                                     PIN_OSPEED_100M(GPIOB_ADIS_MISO) |       \
+                                     PIN_OSPEED_2M(GPIOB_FPGA_IO2))
 #define VAL_GPIOB_PUPDR             (PIN_PUPDR_FLOATING(GPIOB_PIN0) |         \
                                      PIN_PUPDR_FLOATING(GPIOB_PIN1) |         \
                                      PIN_PUPDR_FLOATING(GPIOB_FPGA_IO1) |     \
                                      PIN_PUPDR_FLOATING(GPIOB_JTDO) |         \
                                      PIN_PUPDR_FLOATING(GPIOB_JTRST) |        \
                                      PIN_PUPDR_FLOATING(GPIOB_PIN5) |         \
-                                     PIN_PUPDR_FLOATING(GPIOB_PIN6) |         \
-                                     PIN_PUPDR_FLOATING(GPIOB_PIN7) |         \
+                                     PIN_PUPDR_PULLUP(GPIOB_MOD_TX) |         \
+                                     PIN_PUPDR_PULLUP(GPIOB_MOD_RX) |         \
                                      PIN_PUPDR_PULLUP(GPIOB_SDIO_D4) |        \
                                      PIN_PUPDR_PULLUP(GPIOB_SDIO_D5) |        \
                                      PIN_PUPDR_FLOATING(GPIOB_UBLOX_PPS) |    \
                                      PIN_PUPDR_FLOATING(GPIOB_PPS4) |         \
                                      PIN_PUPDR_FLOATING(GPIOB_PIN12) |        \
                                      PIN_PUPDR_FLOATING(GPIOB_PIN13) |        \
-                                     PIN_PUPDR_FLOATING(GPIOB_ADIS_MISO) |     \
+                                     PIN_PUPDR_FLOATING(GPIOB_ADIS_MISO) |    \
                                      PIN_PUPDR_FLOATING(GPIOB_FPGA_IO2))
 #define VAL_GPIOB_ODR               (PIN_ODR_HIGH(GPIOB_PIN0) |               \
                                      PIN_ODR_HIGH(GPIOB_PIN1) |               \
@@ -414,31 +419,31 @@
                                      PIN_ODR_HIGH(GPIOB_JTDO) |               \
                                      PIN_ODR_HIGH(GPIOB_JTRST) |              \
                                      PIN_ODR_HIGH(GPIOB_PIN5) |               \
-                                     PIN_ODR_HIGH(GPIOB_PIN6) |               \
-                                     PIN_ODR_HIGH(GPIOB_PIN7) |               \
+                                     PIN_ODR_HIGH(GPIOB_MOD_TX) |             \
+                                     PIN_ODR_HIGH(GPIOB_MOD_RX) |             \
                                      PIN_ODR_HIGH(GPIOB_SDIO_D4) |            \
                                      PIN_ODR_HIGH(GPIOB_SDIO_D5) |            \
                                      PIN_ODR_HIGH(GPIOB_UBLOX_PPS) |          \
                                      PIN_ODR_HIGH(GPIOB_PPS4) |               \
                                      PIN_ODR_HIGH(GPIOB_PIN12) |              \
                                      PIN_ODR_HIGH(GPIOB_PIN13) |              \
-                                     PIN_ODR_HIGH(GPIOB_ADIS_MISO) |           \
-                                     PIN_ODR_LOW(GPIOB_FPGA_IO2))
+                                     PIN_ODR_HIGH(GPIOB_ADIS_MISO) |          \
+                                     PIN_ODR_HIGH(GPIOB_FPGA_IO2))
 #define VAL_GPIOB_AFRL              (PIN_AFIO_AF(GPIOB_PIN0, 0) |             \
                                      PIN_AFIO_AF(GPIOB_PIN1, 0) |             \
                                      PIN_AFIO_AF(GPIOB_FPGA_IO1, 0) |         \
                                      PIN_AFIO_AF(GPIOB_JTDO, 0) |             \
                                      PIN_AFIO_AF(GPIOB_JTRST, 0) |            \
                                      PIN_AFIO_AF(GPIOB_PIN5, 0) |             \
-                                     PIN_AFIO_AF(GPIOB_PIN6, 0) |             \
-                                     PIN_AFIO_AF(GPIOB_PIN7, 0))
+                                     PIN_AFIO_AF(GPIOB_MOD_TX, 7) |           \
+                                     PIN_AFIO_AF(GPIOB_MOD_RX, 7))
 #define VAL_GPIOB_AFRH              (PIN_AFIO_AF(GPIOB_SDIO_D4, 12) |         \
                                      PIN_AFIO_AF(GPIOB_SDIO_D5, 12) |         \
                                      PIN_AFIO_AF(GPIOB_UBLOX_PPS, 0) |        \
                                      PIN_AFIO_AF(GPIOB_PPS4, 0) |             \
                                      PIN_AFIO_AF(GPIOB_PIN12, 0) |            \
                                      PIN_AFIO_AF(GPIOB_PIN13, 0) |            \
-                                     PIN_AFIO_AF(GPIOB_ADIS_MISO, 5) |         \
+                                     PIN_AFIO_AF(GPIOB_ADIS_MISO, 5) |        \
                                      PIN_AFIO_AF(GPIOB_FPGA_IO2, 0))
 
 /*
@@ -505,7 +510,7 @@
                                      PIN_PUPDR_PULLUP(GPIOC_SDIO_D2) |        \
                                      PIN_PUPDR_PULLUP(GPIOC_SDIO_D3) |        \
                                      PIN_PUPDR_PULLDOWN(GPIOC_SDIO_CLK) |     \
-                                     PIN_PUPDR_PULLDOWN(GPIOC_FPGA_IO3) |     \
+                                     PIN_PUPDR_PULLUP(GPIOC_FPGA_IO3) |       \
                                      PIN_PUPDR_FLOATING(GPIOC_PIN14) |        \
                                      PIN_PUPDR_FLOATING(GPIOC_PIN15))
 #define VAL_GPIOC_ODR               (PIN_ODR_HIGH(GPIOC_ADC_VCC_P) |          \
@@ -755,7 +760,7 @@
                                      PIN_MODE_INPUT(GPIOF_PIN8) |             \
                                      PIN_MODE_INPUT(GPIOF_PIN9) |             \
                                      PIN_MODE_INPUT(GPIOF_FPGA_IO6) |         \
-                                     PIN_MODE_INPUT(GPIOF_FPGA_IO13) |        \
+                                     PIN_MODE_OUTPUT(GPIOF_FPGA_IO13) |       \
                                      PIN_MODE_ALTERNATE(GPIOF_MEM_A6) |       \
                                      PIN_MODE_ALTERNATE(GPIOF_MEM_A7) |       \
                                      PIN_MODE_ALTERNATE(GPIOF_MEM_A8) |       \
@@ -786,8 +791,8 @@
                                      PIN_OSPEED_100M(GPIOF_PIN7) |            \
                                      PIN_OSPEED_100M(GPIOF_PIN8) |            \
                                      PIN_OSPEED_100M(GPIOF_PIN9) |            \
-                                     PIN_OSPEED_2M(GPIOF_FPGA_IO6) |          \
-                                     PIN_OSPEED_100M(GPIOF_FPGA_IO13) |       \
+                                     PIN_OSPEED_100M(GPIOF_FPGA_IO6) |        \
+                                     PIN_OSPEED_2M(GPIOF_FPGA_IO13) |         \
                                      PIN_OSPEED_100M(GPIOF_MEM_A6) |          \
                                      PIN_OSPEED_100M(GPIOF_MEM_A7) |          \
                                      PIN_OSPEED_100M(GPIOF_MEM_A8) |          \
@@ -854,7 +859,7 @@
                                      PIN_MODE_INPUT(GPIOG_MPU9150_INT) |      \
                                      PIN_MODE_INPUT(GPIOG_FPGA_IO7) |         \
                                      PIN_MODE_ALTERNATE(GPIOG_UART6_RX) |     \
-                                     PIN_MODE_INPUT(GPIOG_FPGA_IO8) |         \
+                                     PIN_MODE_OUTPUT(GPIOG_FPGA_IO8) |        \
                                      PIN_MODE_INPUT(GPIOG_PIN11) |            \
                                      PIN_MODE_ALTERNATE(GPIOG_UART6_RTS) |    \
                                      PIN_MODE_INPUT(GPIOG_FPGA_IO9) |         \
@@ -886,7 +891,7 @@
                                      PIN_OSPEED_2M(GPIOG_MPU9150_INT) |       \
                                      PIN_OSPEED_100M(GPIOG_FPGA_IO7) |        \
                                      PIN_OSPEED_2M(GPIOG_UART6_RX) |          \
-                                     PIN_OSPEED_100M(GPIOG_FPGA_IO8) |        \
+                                     PIN_OSPEED_2M(GPIOG_FPGA_IO8) |          \
                                      PIN_OSPEED_100M(GPIOG_PIN11) |           \
                                      PIN_OSPEED_2M(GPIOG_UART6_RTS) |         \
                                      PIN_OSPEED_100M(GPIOG_FPGA_IO9) |        \
@@ -1146,15 +1151,15 @@
 extern "C" {
 #endif
   void boardInit(void);
+  unsigned int usb_lld_plug_state(void);
+  void usb_lld_connect_bus_workaround(void);
+  void usb_lld_disconnect_bus_workaround(void);
   bool FPGAReady(void);
   bool FPGAbramDbgOk(void);
   bool FSMCDataFlushed(void);
   void FPGAMemAutoFill(bool enable);
   bool FPGAMathRdy(void);
   void FPGAMathRst(bool active);
-  unsigned int usb_lld_plug_state(void);
-  void usb_lld_connect_bus_workaround(void);
-  void usb_lld_disconnect_bus_workaround(void);
 #ifdef __cplusplus
 }
 #endif
