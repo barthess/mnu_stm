@@ -84,7 +84,7 @@ int main(void) {
 
   osalThreadSleepMilliseconds(1000);
 
-  fpga_mtrx_math_test(&MTRXD1, -1);
+  fpga_mtrx_full_test(&MTRXD1, -1);
 }
 
 
