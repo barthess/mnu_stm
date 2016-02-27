@@ -77,14 +77,14 @@ int main(void) {
   fpgaObjectInit(&FPGAD1);
   fpgaStart(&FPGAD1);
 
-  fpgaMtrxObjectInit(&MTRXD1);
-  fpgaMtrxStart(&MTRXD1, &FPGAD1);
+  fpgaMtrxObjectInit(&MTRXD);
+  fpgaMtrxStart(&MTRXD, &FPGAD1);
 
   Exti.start();
 
   osalThreadSleepMilliseconds(1000);
 
-  fpga_mtrx_full_test(&MTRXD1, -1);
+  fpga_mtrx_full_test(-1);
 }
 
 
