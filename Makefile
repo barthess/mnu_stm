@@ -40,7 +40,7 @@ endif
 
 # Enable this if you want to see the full log while compiling.
 ifeq ($(USE_VERBOSE_COMPILE),)
-  USE_VERBOSE_COMPILE = yes
+  USE_VERBOSE_COMPILE = no
 endif
 
 #
@@ -113,7 +113,8 @@ CSRC = $(STARTUPSRC) \
        src/microrl.c \
        src/fpga/fpga.c \
        src/fpga/fpga_pwm.c \
-       src/fpga/fpga_mtrx.c
+       src/fpga/fpga_mtrx.c \
+       src/fpga/fpga_uart.c
 	
 # C++ sources that can be compiled in ARM or THUMB mode depending on the global
 # setting.
@@ -130,7 +131,7 @@ CPPSRC = $(CHCPPSRC) \
 		src/fpga/test/fpga_mem_test.cpp \
 		src/fpga/test/fpga_mtrx_test.cpp \
 		src/fpga/test/fpga_stub_test.cpp \
-		main_wb_mtrx_test.cpp
+		main_wb_uart_test.cpp
 
 # C sources to be compiled in ARM mode regardless of the global setting.
 # NOTE: Mixing ARM and THUMB mode enables the -mthumb-interwork compiler
