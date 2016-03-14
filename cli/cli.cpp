@@ -196,7 +196,7 @@ static THD_FUNCTION(ShellThread, sdp) {
       microrl_insert_char(&microrl_shell, (char)c);
 
     /* if fork finished than collect allocated for it memory */
-    if ((current_cmd_tp != NULL) && (current_cmd_tp->p_state == CH_STATE_FINAL)){
+    if ((current_cmd_tp != NULL) && chThdTerminatedX(current_cmd_tp)){
       chThdWait(current_cmd_tp);
       current_cmd_tp = NULL;
     }
@@ -204,7 +204,7 @@ static THD_FUNCTION(ShellThread, sdp) {
 
   /* умираем по всем правилам, не забываем убить потомков */
   if (current_cmd_tp != NULL){
-    if (current_cmd_tp->p_state != CH_STATE_FINAL)
+    if (chThdTerminatedX(current_cmd_tp))
       chThdTerminate(current_cmd_tp);
     chThdWait(current_cmd_tp);
   }
